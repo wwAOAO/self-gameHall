@@ -1,0 +1,262 @@
+[
+  {
+    "id": "rom-0a374e9edd",
+    "name": "1火焰纹章 封印之剑",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/1%E7%81%AB%E7%84%B0%E7%BA%B9%E7%AB%A0_%E5%B0%81%E5%8D%B0%E4%B9%8B%E5%89%91.gba",
+    "fileName": "1火焰纹章_封印之剑.gba",
+    "accent": "from-violet-300 to-cyan-500"
+  },
+  {
+    "id": "rom-0cbcaa4290",
+    "name": "2火焰纹章 烈火之剑",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/2%E7%81%AB%E7%84%B0%E7%BA%B9%E7%AB%A0-%E7%83%88%E7%81%AB%E4%B9%8B%E5%89%91.gba",
+    "fileName": "2火焰纹章-烈火之剑.gba",
+    "accent": "from-rose-300 to-amber-400"
+  },
+  {
+    "id": "rom-19724426d4",
+    "name": "3火焰纹章 圣魔之光石",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/3%E7%81%AB%E7%84%B0%E7%BA%B9%E7%AB%A0_%E5%9C%A3%E9%AD%94%E4%B9%8B%E5%85%89%E7%9F%B3.gba",
+    "fileName": "3火焰纹章_圣魔之光石.gba",
+    "accent": "from-sky-300 to-blue-500"
+  },
+  {
+    "id": "rom-e139190fbd",
+    "name": "超级机器人大战 SD高达G世纪",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E8%B6%85%E7%BA%A7%E6%9C%BA%E5%99%A8%E4%BA%BA%E5%A4%A7%E6%88%98_SD%E9%AB%98%E8%BE%BEG%E4%B8%96%E7%BA%AA.gba",
+    "fileName": "超级机器人大战_SD高达G世纪.gba",
+    "accent": "from-lime-300 to-teal-500"
+  },
+  {
+    "id": "rom-0fdbfd3d44",
+    "name": "超级机器人大战A",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E8%B6%85%E7%BA%A7%E6%9C%BA%E5%99%A8%E4%BA%BA%E5%A4%A7%E6%88%98A.gba",
+    "fileName": "超级机器人大战A.gba",
+    "accent": "from-fuchsia-300 to-violet-500"
+  },
+  {
+    "id": "rom-cc5f136050",
+    "name": "超级机器人大战D",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E8%B6%85%E7%BA%A7%E6%9C%BA%E5%99%A8%E4%BA%BA%E5%A4%A7%E6%88%98D.gba",
+    "fileName": "超级机器人大战D.gba",
+    "accent": "from-orange-300 to-red-500"
+  },
+  {
+    "id": "rom-e7ec26df00",
+    "name": "超级机器人大战J",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E8%B6%85%E7%BA%A7%E6%9C%BA%E5%99%A8%E4%BA%BA%E5%A4%A7%E6%88%98J.gba",
+    "fileName": "超级机器人大战J.gba",
+    "accent": "from-violet-300 to-cyan-500"
+  },
+  {
+    "id": "rom-7e20b6fa54",
+    "name": "恶魔城 白夜协奏曲",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E6%81%B6%E9%AD%94%E5%9F%8E_%E7%99%BD%E5%A4%9C%E5%8D%8F%E5%A5%8F%E6%9B%B2.gba",
+    "fileName": "恶魔城_白夜协奏曲.gba",
+    "accent": "from-rose-300 to-amber-400"
+  },
+  {
+    "id": "rom-b38a360c4c",
+    "name": "恶魔城 晓月之圆舞曲",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E6%81%B6%E9%AD%94%E5%9F%8E_%E6%99%93%E6%9C%88%E4%B9%8B%E5%9C%86%E8%88%9E%E6%9B%B2.gba",
+    "fileName": "恶魔城_晓月之圆舞曲.gba",
+    "accent": "from-sky-300 to-blue-500"
+  },
+  {
+    "id": "rom-cc399271e2",
+    "name": "恶魔城 月下轮舞曲",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E6%81%B6%E9%AD%94%E5%9F%8E_%E6%9C%88%E4%B8%8B%E8%BD%AE%E8%88%9E%E6%9B%B2.gba",
+    "fileName": "恶魔城_月下轮舞曲.gba",
+    "accent": "from-lime-300 to-teal-500"
+  },
+  {
+    "id": "rom-c9af78084a",
+    "name": "光明之魂2",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E5%85%89%E6%98%8E%E4%B9%8B%E9%AD%822.gba",
+    "fileName": "光明之魂2.gba",
+    "accent": "from-fuchsia-300 to-violet-500"
+  },
+  {
+    "id": "rom-1515fb61ef",
+    "name": "黄金太阳",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E9%BB%84%E9%87%91%E5%A4%AA%E9%98%B3.gba",
+    "fileName": "黄金太阳.gba",
+    "accent": "from-orange-300 to-red-500"
+  },
+  {
+    "id": "rom-c1db742b82",
+    "name": "黄金太阳2",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E9%BB%84%E9%87%91%E5%A4%AA%E9%98%B32.gba",
+    "fileName": "黄金太阳2.gba",
+    "accent": "from-violet-300 to-cyan-500"
+  },
+  {
+    "id": "rom-f6361f9e02",
+    "name": "火焰之纹章圣邪的意志",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E7%81%AB%E7%84%B0%E4%B9%8B%E7%BA%B9%E7%AB%A0%E5%9C%A3%E9%82%AA%E7%9A%84%E6%84%8F%E5%BF%97.gba",
+    "fileName": "火焰之纹章圣邪的意志.gba",
+    "accent": "from-rose-300 to-amber-400"
+  },
+  {
+    "id": "rom-a5239afdae",
+    "name": "火影忍者 木叶战记",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E7%81%AB%E5%BD%B1%E5%BF%8D%E8%80%85-%E6%9C%A8%E5%8F%B6%E6%88%98%E8%AE%B0.gba",
+    "fileName": "火影忍者-木叶战记.gba",
+    "accent": "from-sky-300 to-blue-500"
+  },
+  {
+    "id": "rom-266a26787c",
+    "name": "火影忍者1－最强忍者大集结汉化版",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E7%81%AB%E5%BD%B1%E5%BF%8D%E8%80%851%EF%BC%8D%E6%9C%80%E5%BC%BA%E5%BF%8D%E8%80%85%E5%A4%A7%E9%9B%86%E7%BB%93%E6%B1%89%E5%8C%96%E7%89%88.gba",
+    "fileName": "火影忍者1－最强忍者大集结汉化版.gba",
+    "accent": "from-lime-300 to-teal-500"
+  },
+  {
+    "id": "rom-b0cf9915a7",
+    "name": "火影忍者2最强忍者大集结",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E7%81%AB%E5%BD%B1%E5%BF%8D%E8%80%852%E6%9C%80%E5%BC%BA%E5%BF%8D%E8%80%85%E5%A4%A7%E9%9B%86%E7%BB%93.gba",
+    "fileName": "火影忍者2最强忍者大集结.gba",
+    "accent": "from-fuchsia-300 to-violet-500"
+  },
+  {
+    "id": "rom-b6dedd1d33",
+    "name": "口袋妖怪 焱の冒险之心魂之羽",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E5%8F%A3%E8%A2%8B%E5%A6%96%E6%80%AA--%E7%84%B1%E3%81%AE%E5%86%92%E9%99%A9%E4%B9%8B%E5%BF%83%E9%AD%82%E4%B9%8B%E7%BE%BD.gba",
+    "fileName": "口袋妖怪--焱の冒险之心魂之羽.gba",
+    "accent": "from-orange-300 to-red-500"
+  },
+  {
+    "id": "rom-d9e6227a4e",
+    "name": "口袋妖怪+漆黑的魅影+v4.5+BW",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E5%8F%A3%E8%A2%8B%E5%A6%96%E6%80%AA%2B%E6%BC%86%E9%BB%91%E7%9A%84%E9%AD%85%E5%BD%B1%2Bv4.5%2BBW.gba",
+    "fileName": "口袋妖怪+漆黑的魅影+v4.5+BW.gba",
+    "accent": "from-violet-300 to-cyan-500"
+  },
+  {
+    "id": "rom-929390874c",
+    "name": "口袋妖怪+漆黑的魅影+v4.5+DP",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E5%8F%A3%E8%A2%8B%E5%A6%96%E6%80%AA%2B%E6%BC%86%E9%BB%91%E7%9A%84%E9%AD%85%E5%BD%B1%2Bv4.5%2BDP.gba",
+    "fileName": "口袋妖怪+漆黑的魅影+v4.5+DP.gba",
+    "accent": "from-rose-300 to-amber-400"
+  },
+  {
+    "id": "rom-d583a956cf",
+    "name": "口袋中心超级绿宝石386改版4.0",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E5%8F%A3%E8%A2%8B%E4%B8%AD%E5%BF%83%E8%B6%85%E7%BA%A7%E7%BB%BF%E5%AE%9D%E7%9F%B3386%E6%94%B9%E7%89%884.0.gba",
+    "fileName": "口袋中心超级绿宝石386改版4.0.gba",
+    "accent": "from-sky-300 to-blue-500"
+  },
+  {
+    "id": "rom-620742cd3d",
+    "name": "龙珠大冒险",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E9%BE%99%E7%8F%A0%E5%A4%A7%E5%86%92%E9%99%A9.gba",
+    "fileName": "龙珠大冒险.gba",
+    "accent": "from-lime-300 to-teal-500"
+  },
+  {
+    "id": "rom-ac28a44fbe",
+    "name": "牧场物语 女孩版",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E7%89%A7%E5%9C%BA%E7%89%A9%E8%AF%AD-%E5%A5%B3%E5%AD%A9%E7%89%88.gba",
+    "fileName": "牧场物语-女孩版.gba",
+    "accent": "from-fuchsia-300 to-violet-500"
+  },
+  {
+    "id": "rom-20515557a4",
+    "name": "塞尔达传说 缩小帽",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E5%A1%9E%E5%B0%94%E8%BE%BE%E4%BC%A0%E8%AF%B4_%E7%BC%A9%E5%B0%8F%E5%B8%BD.gba",
+    "fileName": "塞尔达传说_缩小帽.gba",
+    "accent": "from-orange-300 to-red-500"
+  },
+  {
+    "id": "rom-4b6a387d63",
+    "name": "塞尔达传说 众神的三角力量+四支剑",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E5%A1%9E%E5%B0%94%E8%BE%BE%E4%BC%A0%E8%AF%B4_%E4%BC%97%E7%A5%9E%E7%9A%84%E4%B8%89%E8%A7%92%E5%8A%9B%E9%87%8F%2B%E5%9B%9B%E6%94%AF%E5%89%91.gba",
+    "fileName": "塞尔达传说_众神的三角力量+四支剑.gba",
+    "accent": "from-violet-300 to-cyan-500"
+  },
+  {
+    "id": "rom-700f396edf",
+    "name": "永恒之焱",
+    "desc": "GBA ROM 文件，可直接载入游玩。",
+    "tag": "GBA",
+    "format": "Game Boy Advance",
+    "romPath": "/roms/gba/%E6%B0%B8%E6%81%92%E4%B9%8B%E7%84%B1.gba",
+    "fileName": "永恒之焱.gba",
+    "accent": "from-rose-300 to-amber-400"
+  }
+]
