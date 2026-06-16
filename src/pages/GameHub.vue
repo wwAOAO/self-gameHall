@@ -70,6 +70,15 @@ const games = [
         surface: 'bg-orange-500/10 text-orange-100 ring-orange-300/20',
     },
     {
+        id: 'fight-lan',
+        name: '斗地主局域网',
+        desc: '创建三人房间，和同一局域网里的朋友叫分出牌',
+        emoji: 'fight-lan-mark',
+        tag: '对战',
+        accent: 'from-amber-300 via-orange-400 to-red-500',
+        surface: 'bg-orange-500/10 text-amber-100 ring-amber-300/20',
+    },
+    {
         id: 'sokoban',
         name: '推箱子',
         desc: '把箱子推到目标点位',
@@ -139,6 +148,15 @@ const games = [
         emoji: '🀄',
         tag: '国风',
         accent: 'from-green-300 to-emerald-500',
+        surface: 'bg-emerald-500/10 text-emerald-100 ring-emerald-300/20',
+    },
+    {
+        id: 'mahjong-lan',
+        name: '麻将局域网',
+        desc: '创建房间码，和同一局域网里的朋友轮流摸打胡牌',
+        emoji: '🀄',
+        tag: '对战',
+        accent: 'from-emerald-300 via-yellow-300 to-lime-500',
         surface: 'bg-emerald-500/10 text-emerald-100 ring-emerald-300/20',
     },
     {
@@ -309,6 +327,13 @@ const gameCount = computed(() => games.length);
                                         </span>
                                     </span>
                                 </template>
+                                <template v-else-if="game.id === 'fight-lan'">
+                                    <span class="fight-lan-mark" aria-hidden="true">
+                                        <span class="fight-card fight-card-a">A</span>
+                                        <span class="fight-card fight-card-king">王</span>
+                                        <span class="fight-card fight-card-2">2</span>
+                                    </span>
+                                </template>
                                 <template v-else>
                                     {{ game.emoji }}
                                 </template>
@@ -409,6 +434,47 @@ const gameCount = computed(() => games.length);
     top: 17px;
     background: #3b82f6;
     transform: rotate(26deg);
+}
+
+.fight-lan-mark {
+    width: 36px;
+    height: 36px;
+    position: relative;
+    display: block;
+}
+
+.fight-card {
+    position: absolute;
+    width: 20px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 5px;
+    border: 1px solid rgba(120, 53, 15, 0.25);
+    background: linear-gradient(180deg, #fffaf0, #f8e8c9);
+    color: #b91c1c;
+    font-size: 10px;
+    font-weight: 950;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.fight-card-a {
+    left: 2px;
+    top: 6px;
+    transform: rotate(-15deg);
+}
+
+.fight-card-king {
+    left: 8px;
+    top: 3px;
+    z-index: 2;
+    color: #111827;
+}
+
+.fight-card-2 {
+    right: 2px;
+    top: 6px;
+    transform: rotate(15deg);
 }
 
 .game2048-mark {

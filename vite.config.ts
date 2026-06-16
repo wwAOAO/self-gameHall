@@ -12,6 +12,8 @@ import { texasAIPlugin } from './scripts/texas-ai-vite-plugin';
 import { fcRomManifestPlugin } from './scripts/fc-rom-manifest-vite-plugin';
 import { gbaRomManifestPlugin } from './scripts/gba-rom-manifest-vite-plugin';
 import { unoLanPlugin } from './scripts/uno-lan-vite-plugin';
+import { mahjongLanPlugin } from './scripts/mahjong-lan-vite-plugin';
+import { fightLandlordLanPlugin } from './scripts/fight-landlord-lan-vite-plugin';
 
 export default defineConfig({
     server: {
@@ -28,6 +30,8 @@ export default defineConfig({
         douzeroPlugin(),
         texasAIPlugin(),
         unoLanPlugin(),
+        mahjongLanPlugin(),
+        fightLandlordLanPlugin(),
         stockfishPlugin(),
         fcRomManifestPlugin(),
         gbaRomManifestPlugin(),

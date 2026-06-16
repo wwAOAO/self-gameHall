@@ -45,20 +45,20 @@ const ACTION_PASS = '\u8fc7';
 const SELF_TILE_WIDTH = 26;
 const SELF_TILE_HEIGHT = 40;
 const SELF_TILE_GAP = 28;
-const SELF_HAND_Y = 538;
+const SELF_HAND_Y = 486;
 const DISCARD_TILE_WIDTH = 20;
 const DISCARD_TILE_HEIGHT = 28;
-const DISCARD_GAP_X = 24;
-const DISCARD_GAP_Y = 30;
-const SIDE_DISCARD_GAP_Y = 24;
-const ACTION_BUTTON_Y = 468;
+const DISCARD_GAP_X = 25;
+const DISCARD_GAP_Y = 31;
+const SIDE_DISCARD_GAP_Y = 29;
+const ACTION_BUTTON_Y = 444;
 const ACTION_BUTTON_WIDTH = 64;
 const ACTION_BUTTON_HEIGHT = 28;
 const ACTION_BUTTON_GAP = 10;
 const WALL_TILE_WIDTH = 12;
 const WALL_TILE_HEIGHT = 9;
-const WALL_TILE_GAP = 2;
-const WALL_ROW_CAP = 10;
+const WALL_TILE_GAP = 3;
+const WALL_ROW_CAP = 9;
 const WALL_SIDE_CAP = 6;
 
 const TILE_NAMES: Record<string, string[]> = {
@@ -379,6 +379,7 @@ export function useMahjong() {
     let screenCtx: CanvasRenderingContext2D | null = null;
     let offscreen: HTMLCanvasElement | null = null;
     let offCtx: CanvasRenderingContext2D | null = null;
+    let feltPattern: CanvasPattern | null = null;
     let rafId: number | null = null;
     let lastTime = 0;
     let dealingStep = 0;
@@ -392,6 +393,23 @@ export function useMahjong() {
             offscreen.width = 800;
             offscreen.height = 600;
             offCtx = offscreen.getContext('2d')!;
+            const texture = document.createElement('canvas');
+            texture.width = 96;
+            texture.height = 96;
+            const t = texture.getContext('2d')!;
+            t.clearRect(0, 0, 96, 96);
+            for (let y = 0; y < 96; y += 4) {
+                for (let x = 0; x < 96; x += 4) {
+                    const seed = Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453);
+                    const shade = seed - Math.floor(seed);
+                    if (shade < 0.78) continue;
+                    t.fillStyle = shade > 0.92 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.035)';
+                    t.beginPath();
+                    t.arc(x + 2, y + 2, shade > 0.92 ? 1.25 : 0.85, 0, Math.PI * 2);
+                    t.fill();
+                }
+            }
+            feltPattern = offCtx.createPattern(texture, 'repeat');
         }
     }
 
@@ -446,65 +464,78 @@ export function useMahjong() {
         if (!offCtx || !screenCtx || !offscreen) return;
         const c = offCtx;
         c.clearRect(0, 0, 800, 600);
-        const bg = c.createLinearGradient(0, 0, 800, 600);
-        bg.addColorStop(0, '#13221b');
-        bg.addColorStop(0.55, '#0f3f2e');
-        bg.addColorStop(1, '#07130f');
+        const bg = c.createRadialGradient(400, 255, 90, 400, 300, 520);
+        bg.addColorStop(0, '#0b5f67');
+        bg.addColorStop(0.58, '#063b42');
+        bg.addColorStop(1, '#021113');
         c.fillStyle = bg;
         c.fillRect(0, 0, 800, 600);
 
         c.save();
         c.shadowColor = 'rgba(0, 0, 0, 0.45)';
-        c.shadowBlur = 28;
+        c.shadowBlur = 34;
         c.shadowOffsetY = 12;
-        const wood = c.createLinearGradient(38, 34, 762, 568);
-        wood.addColorStop(0, '#9a5b2f');
-        wood.addColorStop(0.48, '#5b321d');
-        wood.addColorStop(1, '#b46e35');
+        const wood = c.createLinearGradient(28, 32, 772, 560);
+        wood.addColorStop(0, '#a13d22');
+        wood.addColorStop(0.18, '#f0a055');
+        wood.addColorStop(0.42, '#5a170f');
+        wood.addColorStop(0.72, '#2b0d08');
+        wood.addColorStop(1, '#bc5d29');
         c.fillStyle = wood;
         c.beginPath();
-        c.roundRect(32, 36, 736, 520, 44);
+        c.roundRect(28, 32, 744, 528, 42);
         c.fill();
         c.restore();
 
-        const rim = c.createLinearGradient(58, 62, 742, 536);
-        rim.addColorStop(0, '#f0bf72');
-        rim.addColorStop(0.5, '#6f3a20');
-        rim.addColorStop(1, '#d79545');
+        const rim = c.createLinearGradient(40, 44, 760, 548);
+        rim.addColorStop(0, '#ffc47a');
+        rim.addColorStop(0.42, '#8b2816');
+        rim.addColorStop(1, '#e0823f');
         c.strokeStyle = rim;
-        c.lineWidth = 4;
+        c.lineWidth = 5;
         c.beginPath();
-        c.roundRect(32, 36, 736, 520, 44);
+        c.roundRect(28, 32, 744, 528, 42);
         c.stroke();
 
-        const felt = c.createLinearGradient(74, 82, 726, 520);
-        felt.addColorStop(0, '#2da466');
-        felt.addColorStop(0.45, '#147246');
-        felt.addColorStop(1, '#0b4d34');
-        c.fillStyle = felt;
+        c.save();
+        c.strokeStyle = 'rgba(28, 7, 4, 0.46)';
+        c.lineWidth = 14;
         c.beginPath();
-        c.roundRect(74, 82, 652, 438, 32);
-        c.fill();
-
-        c.strokeStyle = 'rgba(201, 255, 216, 0.22)';
+        c.roundRect(45, 49, 710, 494, 34);
+        c.stroke();
+        c.strokeStyle = 'rgba(255, 190, 105, 0.24)';
         c.lineWidth = 2;
         c.beginPath();
-        c.roundRect(74, 82, 652, 438, 32);
+        c.roundRect(42, 46, 716, 500, 36);
         c.stroke();
+        c.restore();
 
-        c.strokeStyle = 'rgba(255, 255, 255, 0.045)';
-        c.lineWidth = 1;
+        const felt = c.createRadialGradient(400, 285, 60, 400, 300, 390);
+        felt.addColorStop(0, '#10a0a7');
+        felt.addColorStop(0.56, '#087a82');
+        felt.addColorStop(1, '#03454c');
+        c.fillStyle = felt;
         c.beginPath();
-        c.moveTo(126, 300);
-        c.lineTo(674, 300);
-        c.moveTo(400, 118);
-        c.lineTo(400, 482);
-        c.stroke();
+        c.roundRect(58, 66, 684, 464, 30);
+        c.fill();
 
-        drawDiscardZone(c, 290, 128, 220, 88);
-        drawDiscardZone(c, 290, 374, 220, 88);
-        drawDiscardZone(c, 156, 190, 88, 220);
-        drawDiscardZone(c, 556, 190, 88, 220);
+        c.save();
+        c.beginPath();
+        c.roundRect(58, 66, 684, 464, 30);
+        c.clip();
+        const clothGlow = c.createRadialGradient(335, 205, 35, 400, 300, 430);
+        clothGlow.addColorStop(0, 'rgba(255,255,255,0.14)');
+        clothGlow.addColorStop(0.5, 'rgba(255,255,255,0.025)');
+        clothGlow.addColorStop(1, 'rgba(0,0,0,0.16)');
+        c.fillStyle = clothGlow;
+        c.fillRect(58, 66, 684, 464);
+        if (feltPattern) {
+            c.globalAlpha = 0.16;
+            c.fillStyle = feltPattern;
+            c.fillRect(58, 66, 684, 464);
+            c.globalAlpha = 1;
+        }
+        c.restore();
 
         drawWall(c, deck.value.length);
         drawWindCompass(c, deck.value.length);
@@ -523,8 +554,8 @@ export function useMahjong() {
             const bx = 400 - totalWidth / 2;
             const buttonY = ACTION_BUTTON_Y;
             c.save();
-            c.fillStyle = 'rgba(14, 41, 30, 0.74)';
-            c.strokeStyle = 'rgba(255, 237, 213, 0.16)';
+            c.fillStyle = 'rgba(10, 24, 20, 0.82)';
+            c.strokeStyle = 'rgba(218, 177, 91, 0.28)';
             c.lineWidth = 1;
             c.beginPath();
             c.roundRect(bx - 10, buttonY - 7, totalWidth + 20, ACTION_BUTTON_HEIGHT + 14, 12);
@@ -534,8 +565,8 @@ export function useMahjong() {
             for (let i = 0; i < pendingActions.value.length; i++) {
                 const buttonX = bx + i * (ACTION_BUTTON_WIDTH + ACTION_BUTTON_GAP);
                 const actionGrad = c.createLinearGradient(buttonX, buttonY, buttonX, buttonY + ACTION_BUTTON_HEIGHT);
-                actionGrad.addColorStop(0, '#f97316');
-                actionGrad.addColorStop(1, '#b91c1c');
+                actionGrad.addColorStop(0, '#d6a24a');
+                actionGrad.addColorStop(1, '#7a2e1d');
                 c.save();
                 c.shadowColor = 'rgba(0, 0, 0, 0.35)';
                 c.shadowBlur = 10;
@@ -545,9 +576,9 @@ export function useMahjong() {
                 c.roundRect(buttonX, buttonY, ACTION_BUTTON_WIDTH, ACTION_BUTTON_HEIGHT, 7);
                 c.fill();
                 c.restore();
-                c.strokeStyle = 'rgba(255, 237, 213, 0.45)';
+                c.strokeStyle = 'rgba(255, 237, 180, 0.45)';
                 c.stroke();
-                c.fillStyle = '#fff';
+                c.fillStyle = '#fff8df';
                 c.font = 'bold 13px sans-serif';
                 c.textAlign = 'center';
                 c.textBaseline = 'middle';
@@ -571,17 +602,17 @@ export function useMahjong() {
         // Discard pile
         for (let i = 0; i < player.discarded.length; i++) {
             if (isSelf) {
-                const dx = 304 + (i % 8) * DISCARD_GAP_X;
-                const dy = 382 + Math.floor(i / 8) * DISCARD_GAP_Y;
+                const dx = 298 + (i % 8) * DISCARD_GAP_X;
+                const dy = 385 + Math.floor(i / 8) * DISCARD_GAP_Y;
                 drawDiscardedTile(c, player.discarded[i], dx, dy);
             } else if (seat === 3) {
-                const dx = 304 + (i % 8) * DISCARD_GAP_X;
-                const dy = 180 - Math.floor(i / 8) * DISCARD_GAP_Y;
+                const dx = 298 + (i % 8) * DISCARD_GAP_X;
+                const dy = 188 - Math.floor(i / 8) * DISCARD_GAP_Y;
                 drawDiscardedTile(c, player.discarded[i], dx, dy);
             } else {
                 const isLeft = seat === 2;
-                const dx = isLeft ? 170 + Math.floor(i / 8) * DISCARD_GAP_X : 602 - Math.floor(i / 8) * DISCARD_GAP_X;
-                const dy = 202 + (i % 8) * SIDE_DISCARD_GAP_Y;
+                const dx = isLeft ? 172 + Math.floor(i / 8) * DISCARD_GAP_X : 600 - Math.floor(i / 8) * DISCARD_GAP_X;
+                const dy = 198 + (i % 8) * SIDE_DISCARD_GAP_Y;
                 drawDiscardedTile(c, player.discarded[i], dx, dy);
             }
         }
@@ -650,10 +681,10 @@ export function useMahjong() {
             number,
             { x: number; y: number; dx: number; dy: number; groupDx: number; groupDy: number; w: number; h: number }
         > = {
-            1: { x: 520, y: 488, dx: 16, dy: 0, groupDx: -68, groupDy: 0, w: 64, h: 26 },
-            3: { x: 246, y: 106, dx: 16, dy: 0, groupDx: 68, groupDy: 0, w: 64, h: 26 },
-            2: { x: 88, y: 164, dx: 16, dy: 0, groupDx: 0, groupDy: 30, w: 64, h: 26 },
-            0: { x: 648, y: 164, dx: 16, dy: 0, groupDx: 0, groupDy: 30, w: 64, h: 26 },
+            1: { x: 500, y: 520, dx: 16, dy: 0, groupDx: -66, groupDy: 0, w: 64, h: 26 },
+            3: { x: 244, y: 102, dx: 16, dy: 0, groupDx: 66, groupDy: 0, w: 64, h: 26 },
+            2: { x: 94, y: 164, dx: 16, dy: 0, groupDx: 0, groupDy: 28, w: 64, h: 26 },
+            0: { x: 642, y: 164, dx: 16, dy: 0, groupDx: 0, groupDy: 28, w: 64, h: 26 },
         };
 
         const l = layout[seat];
@@ -689,48 +720,56 @@ export function useMahjong() {
     }
 
     function drawTileBase(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+        const sideDepth = Math.max(3, h * 0.1);
         c.save();
-        c.shadowColor = 'rgba(0, 0, 0, 0.22)';
-        c.shadowBlur = Math.max(3, w * 0.22);
-        c.shadowOffsetY = Math.max(1, h * 0.08);
+        c.shadowColor = 'rgba(0, 0, 0, 0.34)';
+        c.shadowBlur = Math.max(5, w * 0.25);
+        c.shadowOffsetY = Math.max(2, h * 0.08);
+        const sideGrad = c.createLinearGradient(x, y + h - sideDepth, x, y + h + sideDepth);
+        sideGrad.addColorStop(0, '#f4f4ec');
+        sideGrad.addColorStop(0.42, '#0b7a22');
+        sideGrad.addColorStop(1, '#075416');
+        c.fillStyle = sideGrad;
+        c.beginPath();
+        c.roundRect(x, y + sideDepth, w, h, Math.min(6, w * 0.24));
+        c.fill();
+        c.restore();
+
+        c.save();
         const tileFace = c.createLinearGradient(x, y, x, y + h);
-        tileFace.addColorStop(0, '#fffdf1');
-        tileFace.addColorStop(0.58, '#fff5d6');
-        tileFace.addColorStop(1, '#e8d59e');
+        tileFace.addColorStop(0, '#ffffff');
+        tileFace.addColorStop(0.58, '#f4f5ef');
+        tileFace.addColorStop(1, '#d7d8ce');
         c.fillStyle = tileFace;
         c.beginPath();
-        c.roundRect(x, y, w, h, Math.min(5, w * 0.22));
+        c.roundRect(x, y, w, h, Math.min(6, w * 0.24));
+        c.fill();
+        const faceGloss = c.createLinearGradient(x, y, x + w, y + h);
+        faceGloss.addColorStop(0, 'rgba(255,255,255,0.56)');
+        faceGloss.addColorStop(0.42, 'rgba(255,255,255,0)');
+        faceGloss.addColorStop(1, 'rgba(0,0,0,0.06)');
+        c.fillStyle = faceGloss;
+        c.beginPath();
+        c.roundRect(x, y, w, h, Math.min(6, w * 0.24));
         c.fill();
         c.restore();
 
-        c.strokeStyle = 'rgba(91, 63, 25, 0.34)';
-        c.lineWidth = 0.7;
+        c.strokeStyle = 'rgba(34, 52, 38, 0.34)';
+        c.lineWidth = 0.8;
         c.beginPath();
-        c.roundRect(x + 0.5, y + 0.5, w - 1, h - 1, Math.min(5, w * 0.22));
+        c.roundRect(x + 0.5, y + 0.5, w - 1, h - 1, Math.min(6, w * 0.24));
         c.stroke();
 
-        c.fillStyle = 'rgba(255, 255, 255, 0.55)';
-        c.fillRect(x + 2, y + 2, Math.max(1, w - 4), 2);
-    }
-
-    function drawDiscardZone(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-        c.save();
-        c.fillStyle = 'rgba(3, 24, 18, 0.18)';
-        c.beginPath();
-        c.roundRect(x, y, w, h, 12);
-        c.fill();
-        c.strokeStyle = 'rgba(213, 255, 226, 0.08)';
-        c.lineWidth = 1;
-        c.stroke();
-        c.restore();
+        c.fillStyle = 'rgba(255, 255, 255, 0.64)';
+        c.fillRect(x + 3, y + 3, Math.max(1, w - 6), 1.5);
     }
 
     function drawWall(c: CanvasRenderingContext2D, remaining: number) {
         const perSide = Math.ceil(remaining / 4);
-        drawWallSide(c, 330, 244, Math.min(perSide, remaining), 'top');
-        drawWallSide(c, 330, 336, Math.min(perSide, Math.max(remaining - perSide, 0)), 'bottom');
-        drawWallSide(c, 294, 250, Math.min(perSide, Math.max(remaining - perSide * 2, 0)), 'left');
-        drawWallSide(c, 486, 250, Math.min(perSide, Math.max(remaining - perSide * 3, 0)), 'right');
+        drawWallSide(c, 325, 225, Math.min(perSide, remaining), 'top');
+        drawWallSide(c, 325, 355, Math.min(perSide, Math.max(remaining - perSide, 0)), 'bottom');
+        drawWallSide(c, 276, 250, Math.min(perSide, Math.max(remaining - perSide * 2, 0)), 'left');
+        drawWallSide(c, 504, 250, Math.min(perSide, Math.max(remaining - perSide * 3, 0)), 'right');
     }
 
     function drawWallSide(
@@ -746,7 +785,7 @@ export function useMahjong() {
         if (shown <= 0) return;
 
         c.save();
-        c.fillStyle = 'rgba(2, 20, 14, 0.1)';
+        c.fillStyle = 'rgba(255, 255, 255, 0.03)';
         c.beginPath();
         if (side === 'top' || side === 'bottom') {
             c.roundRect(
@@ -785,19 +824,20 @@ export function useMahjong() {
 
     function drawWallTile(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, alternate: boolean) {
         c.save();
-        c.shadowColor = 'rgba(0, 0, 0, 0.18)';
-        c.shadowBlur = 3;
-        c.shadowOffsetY = 1;
+        c.shadowColor = 'rgba(0, 0, 0, 0.28)';
+        c.shadowBlur = 4;
+        c.shadowOffsetY = 1.5;
         const grad = c.createLinearGradient(x, y, x, y + h);
-        grad.addColorStop(0, alternate ? '#f9e7b7' : '#fff7d6');
-        grad.addColorStop(1, alternate ? '#c7a86a' : '#d9bc7a');
+        grad.addColorStop(0, alternate ? '#3aa63f' : '#5bc748');
+        grad.addColorStop(0.58, alternate ? '#158322' : '#1b7f28');
+        grad.addColorStop(1, alternate ? '#0d5a17' : '#0a4b13');
         c.fillStyle = grad;
         c.beginPath();
         c.roundRect(x, y, w, h, 3);
         c.fill();
         c.restore();
 
-        c.strokeStyle = 'rgba(88, 59, 25, 0.35)';
+        c.strokeStyle = 'rgba(225, 255, 228, 0.32)';
         c.lineWidth = 0.7;
         c.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
     }
@@ -805,41 +845,74 @@ export function useMahjong() {
     function drawWindCompass(c: CanvasRenderingContext2D, remaining: number) {
         const cx = 400;
         const cy = 300;
-        const badgeRadius = 8;
+        const plateRadius = 29;
+        const badgeRadius = 6;
         const positions = [
-            { label: '东', seat: 0, x: cx + 24, y: cy },
-            { label: '南', seat: 1, x: cx, y: cy + 20 },
-            { label: '西', seat: 2, x: cx - 24, y: cy },
-            { label: '北', seat: 3, x: cx, y: cy - 20 },
+            { label: '东', seat: 0, x: cx + 18, y: cy },
+            { label: '南', seat: 1, x: cx, y: cy + 16 },
+            { label: '西', seat: 2, x: cx - 18, y: cy },
+            { label: '北', seat: 3, x: cx, y: cy - 16 },
         ];
 
         c.save();
-        c.shadowColor = 'rgba(0, 0, 0, 0.28)';
-        c.shadowBlur = 12;
-        const plate = c.createRadialGradient(cx, cy, 8, cx, cy, 36);
-        plate.addColorStop(0, 'rgba(33, 49, 39, 0.92)');
-        plate.addColorStop(1, 'rgba(8, 18, 14, 0.72)');
+        c.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        c.shadowBlur = 16;
+        const plate = c.createLinearGradient(cx - plateRadius, cy - plateRadius, cx + plateRadius, cy + plateRadius);
+        plate.addColorStop(0, '#201a16');
+        plate.addColorStop(0.33, '#090909');
+        plate.addColorStop(0.65, '#10130f');
+        plate.addColorStop(1, '#1b1b18');
         c.fillStyle = plate;
         c.beginPath();
-        c.arc(cx, cy, 36, 0, Math.PI * 2);
+        for (let i = 0; i < 8; i++) {
+            const angle = -Math.PI / 8 + (Math.PI / 4) * i;
+            const px = cx + Math.cos(angle) * plateRadius;
+            const py = cy + Math.sin(angle) * plateRadius;
+            if (i === 0) c.moveTo(px, py);
+            else c.lineTo(px, py);
+        }
+        c.closePath();
         c.fill();
         c.restore();
 
-        c.strokeStyle = 'rgba(255, 226, 142, 0.28)';
-        c.lineWidth = 1.2;
+        c.strokeStyle = 'rgba(228, 185, 91, 0.8)';
+        c.lineWidth = 2;
         c.beginPath();
-        c.arc(cx, cy, 36, 0, Math.PI * 2);
+        for (let i = 0; i < 8; i++) {
+            const angle = -Math.PI / 8 + (Math.PI / 4) * i;
+            const px = cx + Math.cos(angle) * plateRadius;
+            const py = cy + Math.sin(angle) * plateRadius;
+            if (i === 0) c.moveTo(px, py);
+            else c.lineTo(px, py);
+        }
+        c.closePath();
         c.stroke();
-        c.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        c.strokeStyle = 'rgba(80, 171, 255, 0.8)';
         c.beginPath();
-        c.arc(cx, cy, 21, 0, Math.PI * 2);
+        c.moveTo(cx - 8, cy + 2);
+        c.lineTo(cx - 2, cy + 2);
+        c.lineTo(cx - 2, cy - 6);
+        c.stroke();
+        c.strokeStyle = 'rgba(104, 217, 88, 0.78)';
+        c.beginPath();
+        c.moveTo(cx + 2, cy - 6);
+        c.lineTo(cx + 8, cy - 6);
+        c.lineTo(cx + 8, cy + 2);
+        c.stroke();
+        c.strokeStyle = 'rgba(255, 230, 88, 0.9)';
+        c.beginPath();
+        c.moveTo(cx - 8, cy + 6);
+        c.lineTo(cx + 8, cy + 6);
+        c.lineTo(cx + 8, cy + 12);
+        c.lineTo(cx - 8, cy + 12);
+        c.closePath();
         c.stroke();
 
-        c.fillStyle = '#fef3c7';
-        c.font = 'bold 13px sans-serif';
+        c.fillStyle = '#f8f1d0';
+        c.font = 'bold 12px sans-serif';
         c.textAlign = 'center';
         c.textBaseline = 'middle';
-        c.fillText(String(remaining), cx, cy);
+        c.fillText(String(remaining), cx, cy - 1);
 
         for (const pos of positions) {
             const active = currentTurn.value === pos.seat && gameStatus.value === 'playing';
@@ -848,15 +921,15 @@ export function useMahjong() {
                 c.shadowColor = '#facc15';
                 c.shadowBlur = 10;
             }
-            c.fillStyle = active ? '#facc15' : 'rgba(245, 222, 170, 0.18)';
+            c.fillStyle = active ? 'rgba(214, 162, 74, 0.85)' : 'rgba(245, 222, 170, 0.14)';
             c.beginPath();
             c.arc(pos.x, pos.y, badgeRadius, 0, Math.PI * 2);
             c.fill();
-            c.strokeStyle = active ? '#fff7cc' : 'rgba(255, 226, 142, 0.32)';
-            c.lineWidth = 1;
+            c.strokeStyle = active ? '#ffe3a1' : 'rgba(255, 226, 142, 0.32)';
+            c.lineWidth = active ? 2 : 1;
             c.stroke();
-            c.fillStyle = active ? '#3b2506' : '#f8e8b7';
-            c.font = 'bold 12px serif';
+            c.fillStyle = active ? '#261407' : '#f8e8b7';
+            c.font = 'bold 10px serif';
             c.fillText(pos.label, pos.x, pos.y + 0.5);
             c.restore();
         }
@@ -866,31 +939,41 @@ export function useMahjong() {
 
     function drawTileBack(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
         c.save();
-        c.shadowColor = 'rgba(0, 0, 0, 0.2)';
-        c.shadowBlur = 4;
+        c.shadowColor = 'rgba(0, 0, 0, 0.32)';
+        c.shadowBlur = 5;
         c.shadowOffsetY = 2;
         const back = c.createLinearGradient(x, y, x + w, y + h);
-        back.addColorStop(0, '#1e88a8');
-        back.addColorStop(0.55, '#14537b');
-        back.addColorStop(1, '#0b2f4a');
+        back.addColorStop(0, '#16745f');
+        back.addColorStop(0.5, '#0f4f4b');
+        back.addColorStop(1, '#082f35');
         c.fillStyle = back;
         c.beginPath();
         c.roundRect(x, y, w, h, Math.min(5, w * 0.25));
         c.fill();
         c.restore();
 
-        c.strokeStyle = 'rgba(208, 244, 255, 0.28)';
-        c.lineWidth = 1;
+        c.strokeStyle = 'rgba(187, 255, 226, 0.2)';
+        c.lineWidth = 0.8;
         c.beginPath();
         c.roundRect(x + 1, y + 1, w - 2, h - 2, Math.min(4, w * 0.22));
         c.stroke();
-        c.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+        c.strokeStyle = 'rgba(255, 255, 255, 0.11)';
         c.beginPath();
-        c.moveTo(x + w * 0.28, y + 4);
-        c.lineTo(x + w * 0.28, y + h - 4);
-        c.moveTo(x + w * 0.72, y + 4);
-        c.lineTo(x + w * 0.72, y + h - 4);
+        c.moveTo(x + w * 0.2, y + 5);
+        c.quadraticCurveTo(x + w * 0.5, y + h * 0.18, x + w * 0.8, y + 5);
+        c.moveTo(x + w * 0.2, y + h - 5);
+        c.quadraticCurveTo(x + w * 0.5, y + h * 0.82, x + w * 0.8, y + h - 5);
+        c.moveTo(x + w * 0.5, y + 4);
+        c.lineTo(x + w * 0.5, y + h - 4);
         c.stroke();
+        c.strokeStyle = 'rgba(2, 18, 20, 0.28)';
+        c.beginPath();
+        c.roundRect(x + w * 0.22, y + h * 0.18, w * 0.56, h * 0.64, Math.min(4, w * 0.2));
+        c.stroke();
+        c.fillStyle = 'rgba(217, 255, 232, 0.12)';
+        c.beginPath();
+        c.ellipse(x + w * 0.32, y + h * 0.22, Math.max(1.2, w * 0.12), Math.max(1.6, h * 0.05), -0.4, 0, Math.PI * 2);
+        c.fill();
     }
 
     function getPipPositions(value: number): Array<[number, number]> {

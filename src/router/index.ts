@@ -24,6 +24,8 @@ import TexasHoldemPage from '@/pages/TexasHoldemPage.vue';
 import BlackjackPage from '@/pages/BlackjackPage.vue';
 import Game2048Page from '@/pages/Game2048Page.vue';
 import UnoLanPage from '@/pages/UnoLanPage.vue';
+import MahjongLanPage from '@/pages/MahjongLanPage.vue';
+import FightLandlordLanPage from '@/pages/FightLandlordLanPage.vue';
 
 const routes = [
     {
@@ -67,6 +69,11 @@ const routes = [
         component: FightTheLandlordPage,
     },
     {
+        path: '/fight-lan',
+        name: 'fight-lan',
+        component: FightLandlordLanPage,
+    },
+    {
         path: '/sokoban',
         name: 'sokoban',
         component: SokobanPage,
@@ -105,6 +112,11 @@ const routes = [
         path: '/mahjong',
         name: 'mahjong',
         component: MahjongPage,
+    },
+    {
+        path: '/mahjong-lan',
+        name: 'mahjong-lan',
+        component: MahjongLanPage,
     },
     {
         path: '/billiards',
