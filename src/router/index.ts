@@ -10,6 +10,7 @@ import FightTheLandlordPage from '@/pages/FightTheLandlordPage.vue';
 import SokobanPage from '@/pages/SokobanPage.vue';
 import SudokuPage from '@/pages/SudokuPage.vue';
 import ChineseChessPage from '@/pages/ChineseChessPage.vue';
+import ChineseChessLanPage from '@/pages/ChineseChessLanPage.vue';
 import KlondikePage from '@/pages/KlondikePage.vue';
 import GomokuPage from '@/pages/GomokuPage.vue';
 import FlappyBirdPage from '@/pages/FlappyBirdPage.vue';
@@ -26,6 +27,7 @@ import Game2048Page from '@/pages/Game2048Page.vue';
 import UnoLanPage from '@/pages/UnoLanPage.vue';
 import MahjongLanPage from '@/pages/MahjongLanPage.vue';
 import FightLandlordLanPage from '@/pages/FightLandlordLanPage.vue';
+import GomokuLanPage from '@/pages/GomokuLanPage.vue';
 
 const routes = [
     {
@@ -89,6 +91,11 @@ const routes = [
         component: ChineseChessPage,
     },
     {
+        path: '/chess-lan',
+        name: 'chess-lan',
+        component: ChineseChessLanPage,
+    },
+    {
         path: '/klondike',
         name: 'klondike',
         component: KlondikePage,
@@ -97,6 +104,11 @@ const routes = [
         path: '/gomoku',
         name: 'gomoku',
         component: GomokuPage,
+    },
+    {
+        path: '/gomoku-lan',
+        name: 'gomoku-lan',
+        component: GomokuLanPage,
     },
     {
         path: '/flappy',

@@ -1,17 +1,21 @@
 import { ref, onUnmounted } from 'vue';
 
-const COLS = 9;
-const ROWS = 10;
-const CELL_SIZE = 56;
-const BOARD_PADDING = 32;
+export const CHINESE_CHESS_COLS = 9;
+export const CHINESE_CHESS_ROWS = 10;
+export const CHINESE_CHESS_CELL_SIZE = 56;
+export const CHINESE_CHESS_BOARD_PADDING = 32;
+const COLS = CHINESE_CHESS_COLS;
+const ROWS = CHINESE_CHESS_ROWS;
+const CELL_SIZE = CHINESE_CHESS_CELL_SIZE;
+const BOARD_PADDING = CHINESE_CHESS_BOARD_PADDING;
 const CANVAS_W = BOARD_PADDING * 2 + (COLS - 1) * CELL_SIZE;
 const CANVAS_H = BOARD_PADDING * 2 + (ROWS - 1) * CELL_SIZE;
 
-type Side = 'red' | 'black';
-type PieceType = 'king' | 'advisor' | 'elephant' | 'horse' | 'rook' | 'cannon' | 'pawn';
+export type Side = 'red' | 'black';
+export type PieceType = 'king' | 'advisor' | 'elephant' | 'horse' | 'rook' | 'cannon' | 'pawn';
 type ChessDifficulty = 'easy' | 'hard';
 
-interface Piece {
+export interface Piece {
     type: PieceType;
     side: Side;
     row: number;
@@ -19,13 +23,32 @@ interface Piece {
     alive: boolean;
 }
 
-interface Move {
+export interface Move {
     piece: Piece;
     fromRow: number;
     fromCol: number;
     toRow: number;
     toCol: number;
     captured: Piece | null;
+}
+
+export interface ChineseChessExternalMove {
+    fromRow: number;
+    fromCol: number;
+    toRow: number;
+    toCol: number;
+    captured: Piece | null;
+}
+
+export interface ChineseChessExternalState {
+    pieces: Piece[];
+    currentSide: Side;
+    gameStatus: 'idle' | 'playing' | 'ended';
+    playerSide: Side;
+    message: string;
+    moveHistory: string[];
+    lastMove: ChineseChessExternalMove | null;
+    turnNo: number;
 }
 
 interface MovingAnimation {
@@ -121,7 +144,7 @@ interface SearchContext {
     forecastRisk: Map<string, number>;
 }
 
-function oppositeSide(side: Side): Side {
+export function oppositeSide(side: Side): Side {
     return side === 'red' ? 'black' : 'red';
 }
 
@@ -137,7 +160,7 @@ function boardKey(pieces: Piece[], sideToMove: Side): string {
     return `${sideToMove}|${tokens.join('.')}`;
 }
 
-function createInitialPieces(): Piece[] {
+export function createInitialPieces(): Piece[] {
     const pieces: Piece[] = [];
     const backRank: PieceType[] = [
         'rook',
@@ -165,11 +188,11 @@ function createInitialPieces(): Piece[] {
     return pieces;
 }
 
-function clonePieces(pieces: Piece[]): Piece[] {
+export function clonePieces(pieces: Piece[]): Piece[] {
     return pieces.map(p => ({ ...p }));
 }
 
-function getPieceAt(pieces: Piece[], row: number, col: number): Piece | null {
+export function getPieceAt(pieces: Piece[], row: number, col: number): Piece | null {
     return pieces.find(p => p.alive && p.row === row && p.col === col) || null;
 }
 
@@ -189,7 +212,7 @@ function areKingsFacing(pieces: Piece[]): boolean {
     return !hasPieceBetweenRows(pieces, redKing.col, redKing.row, blackKing.row);
 }
 
-function isInBoard(row: number, col: number): boolean {
+export function isInBoard(row: number, col: number): boolean {
     return row >= 0 && row < 10 && col >= 0 && col < 9;
 }
 
@@ -495,7 +518,7 @@ function getValidMovesForPiece(piece: Piece, pieces: Piece[]): [number, number][
     return moves;
 }
 
-function getLegalMovesForPiece(piece: Piece, pieces: Piece[]): [number, number][] {
+export function getLegalMovesForPiece(piece: Piece, pieces: Piece[]): [number, number][] {
     const targets = getValidMovesForPiece(piece, pieces);
     return targets.filter(([tr, tc]) => {
         const captured = getPieceAt(pieces, tr, tc);
@@ -518,7 +541,7 @@ function getAllMoves(pieces: Piece[], side: Side): Move[] {
     return allMoves;
 }
 
-function isInCheck(pieces: Piece[], side: Side): boolean {
+export function isInCheck(pieces: Piece[], side: Side): boolean {
     const king = pieces.find(p => p.alive && p.type === 'king' && p.side === side);
     if (!king) return true;
     const oppSide = side === 'red' ? 'black' : 'red';
@@ -531,7 +554,7 @@ function isInCheck(pieces: Piece[], side: Side): boolean {
     return false;
 }
 
-function getAllLegalMoves(pieces: Piece[], side: Side): Move[] {
+export function getAllLegalMoves(pieces: Piece[], side: Side): Move[] {
     const allMoves = getAllMoves(pieces, side);
     return allMoves.filter(move => {
         const after = makeMove(pieces, move);
@@ -539,12 +562,12 @@ function getAllLegalMoves(pieces: Piece[], side: Side): Move[] {
     });
 }
 
-function isCheckmate(pieces: Piece[], side: Side): boolean {
+export function isCheckmate(pieces: Piece[], side: Side): boolean {
     const legalMoves = getAllLegalMoves(pieces, side);
     return legalMoves.length === 0 && isInCheck(pieces, side);
 }
 
-function isStalemate(pieces: Piece[], side: Side): boolean {
+export function isStalemate(pieces: Piece[], side: Side): boolean {
     const legalMoves = getAllLegalMoves(pieces, side);
     return legalMoves.length === 0 && !isInCheck(pieces, side);
 }
@@ -1678,10 +1701,85 @@ export function useChineseChess() {
     const lastMove = ref<Move | null>(null);
     const setupAnimationStart = ref(0);
     let setupOrder = new WeakMap<Piece, number>();
+    let externalMoveKey = '';
 
     let aiTimer: ReturnType<typeof setTimeout> | null = null;
     let movingAnimation: MovingAnimation | null = null;
     let captureAnimation: CaptureAnimation | null = null;
+
+    function syncExternalState(snapshot: ChineseChessExternalState) {
+        clearAITimer();
+
+        const nextPieces = clonePieces(snapshot.pieces);
+        const nextMoveKey = snapshot.lastMove
+            ? `${snapshot.turnNo}:${snapshot.lastMove.fromRow},${snapshot.lastMove.fromCol}-${snapshot.lastMove.toRow},${snapshot.lastMove.toCol}`
+            : `${snapshot.turnNo}:none`;
+        const shouldAnimateMove = snapshot.lastMove && nextMoveKey !== externalMoveKey;
+        const shouldAnimateSetup =
+            snapshot.gameStatus === 'playing' &&
+            gameStatus.value !== 'playing' &&
+            snapshot.turnNo <= 1 &&
+            nextPieces.some(piece => piece.alive);
+
+        pieces.value = nextPieces;
+        currentSide.value = snapshot.currentSide;
+        gameStatus.value = snapshot.gameStatus;
+        playerSide.value = snapshot.playerSide;
+        message.value = snapshot.message;
+        moveHistory.value = [...snapshot.moveHistory];
+        selectedPiece.value = null;
+        validMoves.value = [];
+
+        if (shouldAnimateSetup) {
+            setupAnimationStart.value = performance.now();
+            setupOrder = new WeakMap<Piece, number>();
+            pieces.value.forEach((piece, index) => setupOrder.set(piece, index));
+        }
+
+        if (snapshot.lastMove) {
+            const movedPiece = getPieceAt(pieces.value, snapshot.lastMove.toRow, snapshot.lastMove.toCol);
+            if (movedPiece) {
+                lastMove.value = {
+                    piece: movedPiece,
+                    fromRow: snapshot.lastMove.fromRow,
+                    fromCol: snapshot.lastMove.fromCol,
+                    toRow: snapshot.lastMove.toRow,
+                    toCol: snapshot.lastMove.toCol,
+                    captured: snapshot.lastMove.captured,
+                };
+
+                if (shouldAnimateMove) {
+                    const now = performance.now();
+                    movingAnimation = {
+                        piece: movedPiece,
+                        fromRow: snapshot.lastMove.fromRow,
+                        fromCol: snapshot.lastMove.fromCol,
+                        toRow: snapshot.lastMove.toRow,
+                        toCol: snapshot.lastMove.toCol,
+                        startTime: now,
+                        duration: MOVE_ANIMATION_DURATION,
+                    };
+                    captureAnimation = snapshot.lastMove.captured
+                        ? {
+                              piece: { ...snapshot.lastMove.captured },
+                              row: snapshot.lastMove.toRow,
+                              col: snapshot.lastMove.toCol,
+                              startTime: now + MOVE_ANIMATION_DURATION * 0.45,
+                              duration: CAPTURE_ANIMATION_DURATION,
+                          }
+                        : null;
+                }
+            } else {
+                lastMove.value = null;
+            }
+        } else {
+            lastMove.value = null;
+            movingAnimation = null;
+            captureAnimation = null;
+        }
+
+        externalMoveKey = nextMoveKey;
+    }
 
     function setDifficulty(nextDifficulty: ChessDifficulty) {
         difficulty.value = nextDifficulty;
@@ -1732,7 +1830,7 @@ export function useChineseChess() {
         piece: Piece,
         cx: number,
         cy: number,
-        options: { alpha?: number; scale?: number; selected?: boolean; lastMove?: boolean } = {},
+        options: { alpha?: number; scale?: number; selected?: boolean; lastMove?: boolean; textRotation?: number } = {},
     ) {
         const alpha = options.alpha ?? 1;
         const scale = options.scale ?? 1;
@@ -1793,6 +1891,7 @@ export function useChineseChess() {
         const name = PIECE_NAMES[piece.side][piece.type];
         ctx.shadowColor = 'rgba(255, 245, 220, 0.46)';
         ctx.shadowBlur = 1;
+        if (options.textRotation) ctx.rotate(options.textRotation);
         ctx.fillText(name, 0, 1);
         ctx.restore();
     }
@@ -2000,7 +2099,7 @@ export function useChineseChess() {
         );
     }
 
-    function draw(ctx: CanvasRenderingContext2D) {
+    function draw(ctx: CanvasRenderingContext2D, options: { flipped?: boolean } = {}) {
         ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
         const boardX = BOARD_PADDING - 20;
@@ -2229,7 +2328,13 @@ export function useChineseChess() {
                 lastMove.value &&
                 (lastMove.value.piece === piece ||
                     (lastMove.value.toRow === piece.row && lastMove.value.toCol === piece.col));
-            drawPieceAt(ctx, piece, cx, cy, { alpha, scale, selected: isSelected, lastMove: !!isLastMove });
+            drawPieceAt(ctx, piece, cx, cy, {
+                alpha,
+                scale,
+                selected: isSelected,
+                lastMove: !!isLastMove,
+                textRotation: options.flipped ? Math.PI : 0,
+            });
         }
 
         if (captureAnimation) {
@@ -2239,6 +2344,7 @@ export function useChineseChess() {
                 drawPieceAt(ctx, captureAnimation.piece, cx, cy - easeOutCubic(progress) * 18, {
                     alpha: 1 - Math.max(0, progress),
                     scale: 1 + easeOutCubic(progress) * 0.22,
+                    textRotation: options.flipped ? Math.PI : 0,
                 });
             } else {
                 captureAnimation = null;
@@ -2256,7 +2362,7 @@ export function useChineseChess() {
                     movingAnimation.piece,
                     fromX + (toX - fromX) * eased,
                     fromY + (toY - fromY) * eased - Math.sin(Math.PI * Math.max(0, progress)) * 8,
-                    { scale: 1.05, lastMove: true },
+                    { scale: 1.05, lastMove: true, textRotation: options.flipped ? Math.PI : 0 },
                 );
             } else {
                 movingAnimation = null;
@@ -2287,6 +2393,7 @@ export function useChineseChess() {
         moveHistory,
         lastMove,
         setDifficulty,
+        syncExternalState,
         startGame,
         handleClick,
         draw,

@@ -14,6 +14,8 @@ import { gbaRomManifestPlugin } from './scripts/gba-rom-manifest-vite-plugin';
 import { unoLanPlugin } from './scripts/uno-lan-vite-plugin';
 import { mahjongLanPlugin } from './scripts/mahjong-lan-vite-plugin';
 import { fightLandlordLanPlugin } from './scripts/fight-landlord-lan-vite-plugin';
+import { gomokuLanPlugin } from './scripts/gomoku-lan-vite-plugin';
+import { chineseChessLanPlugin } from './scripts/chinese-chess-lan-vite-plugin';
 
 export default defineConfig({
     server: {
@@ -32,6 +34,8 @@ export default defineConfig({
         unoLanPlugin(),
         mahjongLanPlugin(),
         fightLandlordLanPlugin(),
+        gomokuLanPlugin(),
+        chineseChessLanPlugin(),
         stockfishPlugin(),
         fcRomManifestPlugin(),
         gbaRomManifestPlugin(),

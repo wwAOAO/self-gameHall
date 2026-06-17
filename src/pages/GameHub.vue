@@ -106,6 +106,15 @@ const games = [
         surface: 'bg-red-500/10 text-red-100 ring-red-300/20',
     },
     {
+        id: 'chess-lan',
+        name: '中国象棋局域网',
+        desc: '创建双人房间，和同一局域网里的朋友红黑对弈',
+        emoji: '♟️',
+        tag: '对战',
+        accent: 'from-red-300 via-amber-300 to-stone-600',
+        surface: 'bg-amber-500/10 text-amber-100 ring-amber-300/20',
+    },
+    {
         id: 'klondike',
         name: '接龙',
         desc: '红黑交替排序，归位四花色',
@@ -122,6 +131,15 @@ const games = [
         tag: '棋类',
         accent: 'from-neutral-200 to-yellow-500',
         surface: 'bg-neutral-500/10 text-neutral-100 ring-neutral-300/20',
+    },
+    {
+        id: 'gomoku-lan',
+        name: '五子棋局域网',
+        desc: '创建双人房间，和同一局域网里的朋友黑白对弈',
+        emoji: '⚫',
+        tag: '对战',
+        accent: 'from-neutral-100 via-amber-300 to-stone-600',
+        surface: 'bg-amber-500/10 text-amber-100 ring-amber-300/20',
     },
     {
         id: 'flappy',
