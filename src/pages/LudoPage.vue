@@ -30,7 +30,13 @@ function pieceClass(piece: PieceView) {
         yellow: piece.player === 3,
         legal: game.isLegalPiece(piece.player, piece.piece.id),
         last: game.lastMove.value?.player === piece.player && game.lastMove.value.piece === piece.piece.id + 1,
+        hidden: isAnimatingPiece(piece),
     };
+}
+
+function isAnimatingPiece(piece: PieceView) {
+    const animation = game.flightAnimation.value;
+    return animation?.player === piece.player && animation.pieceId === piece.piece.id;
 }
 
 function getPieceStyle(index: number, total: number): CSSProperties {
@@ -62,6 +68,28 @@ function getPieceStyle(index: number, total: number): CSSProperties {
         '--piece-y': `${y}px`,
         '--piece-scale': String(scale),
     } as CSSProperties;
+}
+
+function getFlightPieceStyle(): CSSProperties {
+    const animation = game.flightAnimation.value;
+    if (!animation) return {};
+
+    return {
+        '--flight-from-x': `${((animation.from.x - 0.5) / 15) * 100}%`,
+        '--flight-from-y': `${((animation.from.y - 0.5) / 15) * 100}%`,
+        '--flight-to-x': `${((animation.to.x - 0.5) / 15) * 100}%`,
+        '--flight-to-y': `${((animation.to.y - 0.5) / 15) * 100}%`,
+    } as CSSProperties;
+}
+
+function getFlightPieceClass() {
+    const animation = game.flightAnimation.value;
+    if (!animation) return {};
+
+    return {
+        [game.players.value[animation.player].color]: true,
+        takeoff: animation.kind === 'takeoff',
+    };
 }
 
 function getPieceTitle(piece: PieceView) {
@@ -124,6 +152,15 @@ function statsText(player: LudoPlayer) {
                             </button>
                         </div>
                     </div>
+                    <div
+                        v-if="game.flightAnimation.value"
+                        class="flight-piece"
+                        :class="getFlightPieceClass()"
+                        :style="getFlightPieceStyle()"
+                    >
+                        <Plane class="plane-icon" />
+                        <span>{{ game.flightAnimation.value.pieceId + 1 }}</span>
+                    </div>
                 </div>
             </section>
 
@@ -140,8 +177,9 @@ function statsText(player: LudoPlayer) {
                         </div>
                     </div>
 
-                    <div class="dice-box" :class="{ rolling: game.phase.value === 'moving' }">
-                        <span v-if="game.dice.value">{{ game.dice.value }}</span>
+                    <div class="dice-box" :class="{ rolling: game.diceRolling.value }">
+                        <span v-if="game.diceRolling.value">{{ game.dicePreview.value ?? '?' }}</span>
+                        <span v-else-if="game.dice.value">{{ game.dice.value }}</span>
                         <span v-else>?</span>
                     </div>
 
@@ -292,6 +330,7 @@ function statsText(player: LudoPlayer) {
 }
 
 .board-grid {
+    position: relative;
     width: min(100%, 86vh, 820px);
     aspect-ratio: 1;
     display: grid;
@@ -434,10 +473,73 @@ function statsText(player: LudoPlayer) {
         scale(calc(var(--piece-scale) * 1.06));
 }
 
+.plane-piece.hidden {
+    opacity: 0;
+}
+
 .plane-piece.last {
     box-shadow:
         0 0 0 3px rgba(17, 24, 39, 0.22),
         0 8px 18px rgba(15, 23, 42, 0.24);
+}
+
+.flight-piece {
+    --flight-from-x: 50%;
+    --flight-from-y: 50%;
+    --flight-to-x: 50%;
+    --flight-to-y: 50%;
+    position: absolute;
+    left: var(--flight-from-x);
+    top: var(--flight-from-y);
+    z-index: 20;
+    width: min(5.2%, 42px);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.88);
+    box-shadow:
+        0 12px 24px rgba(0, 0, 0, 0.32),
+        0 0 0 6px rgba(255, 255, 255, 0.12);
+    pointer-events: none;
+    animation: planeFly 680ms cubic-bezier(0.2, 0.82, 0.25, 1) both;
+}
+
+.flight-piece.takeoff {
+    animation-duration: 760ms;
+}
+
+.flight-piece.red {
+    background: #ef4444;
+}
+
+.flight-piece.blue {
+    background: #3b82f6;
+}
+
+.flight-piece.green {
+    background: #22c55e;
+}
+
+.flight-piece.yellow {
+    background: #f59e0b;
+}
+
+.flight-piece span {
+    position: absolute;
+    right: -2px;
+    bottom: -3px;
+    width: 16px;
+    height: 16px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #0f172a;
+    background: #fff;
+    font-size: 10px;
+    font-weight: 950;
+    line-height: 1;
 }
 
 .plane-piece:disabled {
@@ -534,7 +636,7 @@ function statsText(player: LudoPlayer) {
 }
 
 .dice-box.rolling {
-    animation: diceNudge 360ms ease;
+    animation: diceRoll 650ms cubic-bezier(0.22, 0.95, 0.32, 1);
 }
 
 .message {
@@ -657,6 +759,52 @@ function statsText(player: LudoPlayer) {
     }
     100% {
         transform: rotate(0deg) scale(1);
+    }
+}
+
+@keyframes diceRoll {
+    0% {
+        transform: rotate(0deg) translateY(0) scale(1);
+        filter: brightness(1);
+    }
+    18% {
+        transform: rotate(-18deg) translateY(-9px) scale(1.06);
+    }
+    36% {
+        transform: rotate(22deg) translateY(5px) scale(0.98);
+    }
+    55% {
+        transform: rotate(-15deg) translateY(-6px) scale(1.04);
+        filter: brightness(1.18);
+    }
+    76% {
+        transform: rotate(12deg) translateY(3px) scale(1);
+    }
+    100% {
+        transform: rotate(0deg) translateY(0) scale(1);
+        filter: brightness(1);
+    }
+}
+
+@keyframes planeFly {
+    0% {
+        left: var(--flight-from-x);
+        top: var(--flight-from-y);
+        transform: translate(-50%, -50%) scale(0.78) rotate(-10deg);
+        opacity: 0.72;
+    }
+    28% {
+        transform: translate(-50%, calc(-50% - 18px)) scale(1.12) rotate(9deg);
+        opacity: 1;
+    }
+    68% {
+        transform: translate(-50%, calc(-50% - 10px)) scale(1.04) rotate(-4deg);
+    }
+    100% {
+        left: var(--flight-to-x);
+        top: var(--flight-to-y);
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
     }
 }
 

@@ -130,9 +130,9 @@ function handleCanvasLeave() {
                     >
                         <div class="text-center pointer-events-auto">
                             <p v-if="game.playerColor.value === 1" class="text-gray-300 text-sm mb-1">
-                                你执黑棋（先行）
+                                你选择先手（黑棋）
                             </p>
-                            <p v-else class="text-gray-300 text-sm mb-1">你执白棋（后手）</p>
+                            <p v-else class="text-gray-300 text-sm mb-1">你选择后手（白棋）</p>
                             <div class="flex gap-2 mb-3 justify-center">
                                 <button
                                     class="px-3 py-1 rounded text-xs font-medium"
@@ -143,7 +143,7 @@ function handleCanvasLeave() {
                                     "
                                     @click="game.playerColor.value = 1"
                                 >
-                                    ● 黑棋
+                                    先手 · 黑棋
                                 </button>
                                 <button
                                     class="px-3 py-1 rounded text-xs font-medium"
@@ -154,7 +154,7 @@ function handleCanvasLeave() {
                                     "
                                     @click="game.playerColor.value = 2"
                                 >
-                                    ○ 白棋
+                                    后手 · 白棋
                                 </button>
                             </div>
                             <div class="flex gap-2 mb-3 justify-center">

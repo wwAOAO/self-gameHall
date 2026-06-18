@@ -1785,7 +1785,7 @@ export function useChineseChess() {
         difficulty.value = nextDifficulty;
     }
 
-    function startGame() {
+    function startGame(selectedPlayerSide: Side = playerSide.value) {
         pieces.value = createInitialPieces();
         setupAnimationStart.value = performance.now();
         setupOrder = new WeakMap<Piece, number>();
@@ -1793,14 +1793,17 @@ export function useChineseChess() {
         movingAnimation = null;
         captureAnimation = null;
         currentSide.value = 'red';
-        playerSide.value = 'red';
+        playerSide.value = selectedPlayerSide;
         selectedPiece.value = null;
         validMoves.value = [];
-        message.value = '红方先行，请走棋';
+        message.value = selectedPlayerSide === 'red' ? '红方先行，请走棋' : '你执黑，电脑先走';
         moveHistory.value = [];
         lastMove.value = null;
         gameStatus.value = 'playing';
         clearAITimer();
+        if (selectedPlayerSide === 'black') {
+            scheduleAIMove();
+        }
     }
 
     function clearAITimer() {
@@ -1810,8 +1813,10 @@ export function useChineseChess() {
         }
     }
 
-    function boardToCanvas(row: number, col: number): [number, number] {
-        return [BOARD_PADDING + col * CELL_SIZE, BOARD_PADDING + row * CELL_SIZE];
+    function boardToCanvas(row: number, col: number, flipped = false): [number, number] {
+        const drawRow = flipped ? ROWS - 1 - row : row;
+        const drawCol = flipped ? COLS - 1 - col : col;
+        return [BOARD_PADDING + drawCol * CELL_SIZE, BOARD_PADDING + drawRow * CELL_SIZE];
     }
 
     function easeOutCubic(t: number): number {
@@ -1830,7 +1835,7 @@ export function useChineseChess() {
         piece: Piece,
         cx: number,
         cy: number,
-        options: { alpha?: number; scale?: number; selected?: boolean; lastMove?: boolean; textRotation?: number } = {},
+        options: { alpha?: number; scale?: number; selected?: boolean; lastMove?: boolean } = {},
     ) {
         const alpha = options.alpha ?? 1;
         const scale = options.scale ?? 1;
@@ -1891,16 +1896,17 @@ export function useChineseChess() {
         const name = PIECE_NAMES[piece.side][piece.type];
         ctx.shadowColor = 'rgba(255, 245, 220, 0.46)';
         ctx.shadowBlur = 1;
-        if (options.textRotation) ctx.rotate(options.textRotation);
         ctx.fillText(name, 0, 1);
         ctx.restore();
     }
 
-    function canvasToBoard(mx: number, my: number): [number, number] | null {
-        const col = Math.round((mx - BOARD_PADDING) / CELL_SIZE);
-        const row = Math.round((my - BOARD_PADDING) / CELL_SIZE);
+    function canvasToBoard(mx: number, my: number, flipped = false): [number, number] | null {
+        const drawCol = Math.round((mx - BOARD_PADDING) / CELL_SIZE);
+        const drawRow = Math.round((my - BOARD_PADDING) / CELL_SIZE);
+        const col = flipped ? COLS - 1 - drawCol : drawCol;
+        const row = flipped ? ROWS - 1 - drawRow : drawRow;
         if (!isInBoard(row, col)) return null;
-        const [cx, cy] = boardToCanvas(row, col);
+        const [cx, cy] = boardToCanvas(row, col, flipped);
         const dist = Math.sqrt((mx - cx) ** 2 + (my - cy) ** 2);
         if (dist > CELL_SIZE * 0.45) return null;
         return [row, col];
@@ -1909,7 +1915,7 @@ export function useChineseChess() {
     function handleClick(mx: number, my: number) {
         if (gameStatus.value !== 'playing' || currentSide.value !== playerSide.value) return;
 
-        const pos = canvasToBoard(mx, my);
+        const pos = canvasToBoard(mx, my, playerSide.value === 'black');
         if (!pos) {
             selectedPiece.value = null;
             validMoves.value = [];
@@ -2197,7 +2203,7 @@ export function useChineseChess() {
         ctx.stroke();
 
         const drawMarker = (row: number, col: number) => {
-            const [x, y] = boardToCanvas(row, col);
+            const [x, y] = boardToCanvas(row, col, !!options.flipped);
             ctx.save();
             ctx.strokeStyle = 'rgba(86, 42, 15, 0.72)';
             ctx.lineWidth = 1.2;
@@ -2259,7 +2265,7 @@ export function useChineseChess() {
 
         if (lastMove.value) {
             const drawMoveBox = (row: number, col: number, color: string) => {
-                const [x, y] = boardToCanvas(row, col);
+                const [x, y] = boardToCanvas(row, col, !!options.flipped);
                 const s = CELL_SIZE * 0.38;
                 ctx.save();
                 ctx.strokeStyle = color;
@@ -2274,7 +2280,7 @@ export function useChineseChess() {
         }
 
         for (const [r, c] of validMoves.value) {
-            const [cx, cy] = boardToCanvas(r, c);
+            const [cx, cy] = boardToCanvas(r, c, !!options.flipped);
             const target = getPieceAt(pieces.value, r, c);
             ctx.save();
             if (target) {
@@ -2304,7 +2310,7 @@ export function useChineseChess() {
             if (!piece.alive) continue;
             if (movingAnimation?.piece === piece) continue;
 
-            const [targetX, targetY] = boardToCanvas(piece.row, piece.col);
+            const [targetX, targetY] = boardToCanvas(piece.row, piece.col, !!options.flipped);
             let cx = targetX;
             let cy = targetY;
             let alpha = 1;
@@ -2333,18 +2339,16 @@ export function useChineseChess() {
                 scale,
                 selected: isSelected,
                 lastMove: !!isLastMove,
-                textRotation: options.flipped ? Math.PI : 0,
             });
         }
 
         if (captureAnimation) {
             const progress = (now - captureAnimation.startTime) / captureAnimation.duration;
             if (progress < 1) {
-                const [cx, cy] = boardToCanvas(captureAnimation.row, captureAnimation.col);
+                const [cx, cy] = boardToCanvas(captureAnimation.row, captureAnimation.col, !!options.flipped);
                 drawPieceAt(ctx, captureAnimation.piece, cx, cy - easeOutCubic(progress) * 18, {
                     alpha: 1 - Math.max(0, progress),
                     scale: 1 + easeOutCubic(progress) * 0.22,
-                    textRotation: options.flipped ? Math.PI : 0,
                 });
             } else {
                 captureAnimation = null;
@@ -2355,14 +2359,18 @@ export function useChineseChess() {
             const progress = (now - movingAnimation.startTime) / movingAnimation.duration;
             if (progress < 1) {
                 const eased = easeOutCubic(progress);
-                const [fromX, fromY] = boardToCanvas(movingAnimation.fromRow, movingAnimation.fromCol);
-                const [toX, toY] = boardToCanvas(movingAnimation.toRow, movingAnimation.toCol);
+                const [fromX, fromY] = boardToCanvas(
+                    movingAnimation.fromRow,
+                    movingAnimation.fromCol,
+                    !!options.flipped,
+                );
+                const [toX, toY] = boardToCanvas(movingAnimation.toRow, movingAnimation.toCol, !!options.flipped);
                 drawPieceAt(
                     ctx,
                     movingAnimation.piece,
                     fromX + (toX - fromX) * eased,
                     fromY + (toY - fromY) * eased - Math.sin(Math.PI * Math.max(0, progress)) * 8,
-                    { scale: 1.05, lastMove: true, textRotation: options.flipped ? Math.PI : 0 },
+                    { scale: 1.05, lastMove: true },
                 );
             } else {
                 movingAnimation = null;

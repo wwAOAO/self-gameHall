@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useChineseChess } from '@/composables/useChineseChess';
-import { ArrowLeft, Play, RotateCcw } from 'lucide-vue-next';
+import { ArrowLeft, RotateCcw } from 'lucide-vue-next';
 
 const router = useRouter();
 const game = useChineseChess();
@@ -13,7 +13,7 @@ function renderLoop() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    game.draw(ctx);
+    game.draw(ctx, { flipped: game.playerSide.value === 'black' });
 }
 
 let renderRaf: number | null = null;
@@ -107,10 +107,15 @@ function getLastMoves() {
                         class="absolute inset-0 flex items-center justify-center bg-[#120d09]/55 rounded-lg pointer-events-none backdrop-blur-[2px]"
                     >
                         <div class="start-panel pointer-events-auto">
-                            <p class="text-[#f7dca3] text-lg font-bold mb-1">红先黑后</p>
-                            <button class="primary-button" @click="game.startGame()">
-                                <Play class="w-4 h-4" /> 开始
-                            </button>
+                            <p class="text-[#f7dca3] text-lg font-bold mb-1">选择</p>
+                            <div class="side-choice">
+                                <button class="primary-button side-choice-button" @click="game.startGame('red')">
+                                    我执红(先手)
+                                </button>
+                                <button class="secondary-button side-choice-button" @click="game.startGame('black')">
+                                    我执黑(后手)
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -125,7 +130,7 @@ function getLastMoves() {
                             >
                                 {{ game.message.value }}
                             </p>
-                            <button class="primary-button" @click="game.startGame()">
+                            <button class="primary-button" @click="game.startGame(game.playerSide.value)">
                                 <RotateCcw class="w-4 h-4" /> 再来
                             </button>
                         </div>
@@ -146,7 +151,11 @@ function getLastMoves() {
             </div>
 
             <div class="shrink-0 pb-3 pt-2 flex gap-2">
-                <button v-if="game.gameStatus.value !== 'idle'" class="secondary-button" @click="game.startGame()">
+                <button
+                    v-if="game.gameStatus.value !== 'idle'"
+                    class="secondary-button"
+                    @click="game.startGame(game.playerSide.value)"
+                >
                     <RotateCcw class="w-4 h-4" /> 重开
                 </button>
             </div>
@@ -307,6 +316,23 @@ function getLastMoves() {
     background: rgba(31, 20, 14, 0.86);
     text-align: center;
     box-shadow: 0 18px 44px rgba(0, 0, 0, 0.36);
+}
+
+.side-choice {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    justify-items: center;
+}
+
+.side-choice-button {
+    width: 8.8rem;
+    min-width: 8.8rem;
+    height: 2.6rem;
+    margin: 0;
+    padding: 0;
+    font-size: 0.925rem;
+    font-weight: 900;
 }
 
 .primary-button {

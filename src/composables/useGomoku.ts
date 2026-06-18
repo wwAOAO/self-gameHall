@@ -56,7 +56,7 @@ const SCORE_DOUBLE_THREE = 180000;
 const MOVE_RANDOMNESS = 1200;
 const CLOSE_SCORE_RATIO = 0.025;
 const AI_TIME_LIMIT_MS = 1100;
-const RAPFI_MOVE_TIME_MS = 1200;
+const RAPFI_MOVE_TIME_MS = 3500;
 const MAX_SEARCH_DEPTH = 4;
 const ROOT_RANDOMNESS = 900;
 const ROOT_CLOSE_SCORE_RATIO = 0.015;
@@ -969,7 +969,7 @@ export function useGomoku() {
     function switchColor() {
         if (gameStatus.value !== 'idle') return;
         playerColor.value = playerColor.value === 1 ? 2 : 1;
-        message.value = playerColor.value === 1 ? '你执黑棋（先行）' : '你执白棋（后手）';
+    message.value = playerColor.value === 1 ? '你选择先手（黑棋）' : '你选择后手（白棋）';
     }
 
     function draw(ctx: CanvasRenderingContext2D) {

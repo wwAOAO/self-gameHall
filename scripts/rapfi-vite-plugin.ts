@@ -77,6 +77,7 @@ class RapfiPiskvork {
             );
 
             this.pending = { resolve, timeout };
+            engine.stdin.write(`INFO timeout_turn ${Math.max(100, Math.floor(timeMs))}\n`);
             engine.stdin.write('BOARD\n');
             for (const move of moves) {
                 engine.stdin.write(`${move.col},${move.row},${move.player}\n`);

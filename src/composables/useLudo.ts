@@ -33,6 +33,14 @@ export interface PieceView {
     piece: LudoPiece;
 }
 
+export interface FlightAnimation {
+    player: PlayerId;
+    pieceId: number;
+    from: BoardPoint;
+    to: BoardPoint;
+    kind: 'takeoff' | 'move';
+}
+
 const BOARD_SIZE = 15;
 const TRACK_LENGTH = 48;
 const FINAL_LENGTH = 6;
@@ -157,8 +165,14 @@ export function useLudo() {
     const winner = ref<PlayerId | null>(null);
     const lastMove = ref<{ player: PlayerId; piece: number } | null>(null);
     const eventLog = ref<string[]>([]);
+    const diceRolling = ref(false);
+    const dicePreview = ref<number | null>(null);
+    const flightAnimation = ref<FlightAnimation | null>(null);
 
     let aiTimer: ReturnType<typeof setTimeout> | null = null;
+    let diceTimer: ReturnType<typeof setTimeout> | null = null;
+    let diceInterval: ReturnType<typeof setInterval> | null = null;
+    let flightTimer: ReturnType<typeof setTimeout> | null = null;
 
     const activePlayer = computed(() => players.value[currentPlayer.value]);
     const legalMoves = computed(() => {
@@ -166,7 +180,11 @@ export function useLudo() {
         return activePlayer.value.pieces.filter(piece => pieceCanMove(piece, dice.value ?? 0)).map(piece => piece.id);
     });
     const canHumanRoll = computed(
-        () => phase.value === 'rolling' && currentPlayer.value === HUMAN_PLAYER && !activePlayer.value.isAI,
+        () =>
+            phase.value === 'rolling' &&
+            currentPlayer.value === HUMAN_PLAYER &&
+            !activePlayer.value.isAI &&
+            !diceRolling.value,
     );
     const canHumanMove = computed(
         () => phase.value === 'selecting' && currentPlayer.value === HUMAN_PLAYER && legalMoves.value.length > 0,
@@ -177,6 +195,18 @@ export function useLudo() {
         if (aiTimer !== null) {
             clearTimeout(aiTimer);
             aiTimer = null;
+        }
+        if (diceTimer !== null) {
+            clearTimeout(diceTimer);
+            diceTimer = null;
+        }
+        if (diceInterval !== null) {
+            clearInterval(diceInterval);
+            diceInterval = null;
+        }
+        if (flightTimer !== null) {
+            clearTimeout(flightTimer);
+            flightTimer = null;
         }
     }
 
@@ -193,6 +223,9 @@ export function useLudo() {
         winner.value = null;
         lastMove.value = null;
         eventLog.value = [];
+        diceRolling.value = false;
+        dicePreview.value = null;
+        flightAnimation.value = null;
         message.value = '轮到你投骰';
     }
 
@@ -293,10 +326,19 @@ export function useLudo() {
         const piece = player.pieces[pieceId];
         const rolled = dice.value;
         const fromHome = piece.step < 0;
+        const fromPoint = getPiecePoint(playerId, piece);
 
         phase.value = 'moving';
         if (fromHome) piece.step = 0;
         else piece.step += rolled;
+        const toPoint = getPiecePoint(playerId, piece);
+        flightAnimation.value = {
+            player: playerId,
+            pieceId,
+            from: fromPoint,
+            to: toPoint,
+            kind: fromHome ? 'takeoff' : 'move',
+        };
 
         lastMove.value = { player: playerId, piece: pieceId + 1 };
         log(`${player.shortName}${pieceId + 1} ${fromHome ? '起飞' : `前进 ${rolled} 格`}`);
@@ -305,13 +347,21 @@ export function useLudo() {
         if (trackIndex !== null) captureAt(playerId, trackIndex);
 
         if (hasWon(playerId)) {
-            winner.value = playerId;
-            phase.value = 'ended';
-            message.value = `${player.name} 获胜`;
+            flightTimer = setTimeout(() => {
+                flightTimer = null;
+                flightAnimation.value = null;
+                winner.value = playerId;
+                phase.value = 'ended';
+                message.value = `${player.name} 获胜`;
+            }, fromHome ? 760 : 680);
             return;
         }
 
-        aiTimer = setTimeout(() => finishTurn(rolled === 6), 360);
+        flightTimer = setTimeout(() => {
+            flightTimer = null;
+            flightAnimation.value = null;
+            finishTurn(rolled === 6);
+        }, fromHome ? 760 : 680);
     }
 
     function chooseAIMove(): number {
@@ -371,11 +421,35 @@ export function useLudo() {
         }
     }
 
+    function animatedRollDice() {
+        if (phase.value !== 'rolling' || diceRolling.value) return;
+
+        clearTimers();
+        diceRolling.value = true;
+        dice.value = null;
+        dicePreview.value = Math.floor(Math.random() * 6) + 1;
+
+        diceInterval = setInterval(() => {
+            dicePreview.value = Math.floor(Math.random() * 6) + 1;
+        }, 80);
+
+        diceTimer = setTimeout(() => {
+            if (diceInterval !== null) {
+                clearInterval(diceInterval);
+                diceInterval = null;
+            }
+            diceTimer = null;
+            diceRolling.value = false;
+            dicePreview.value = null;
+            rollDice();
+        }, 650);
+    }
+
     function scheduleAITurn() {
         clearTimers();
         aiTimer = setTimeout(() => {
             if (phase.value !== 'rolling' || !activePlayer.value.isAI) return;
-            rollDice();
+            animatedRollDice();
         }, 620);
     }
 
@@ -408,12 +482,15 @@ export function useLudo() {
         winner,
         lastMove,
         eventLog,
+        diceRolling,
+        dicePreview,
+        flightAnimation,
         legalMoves,
         canHumanRoll,
         canHumanMove,
         boardCells,
         startGame,
-        rollDice,
+        rollDice: animatedRollDice,
         movePiece,
         clearTimers,
         getPiecesAt,
