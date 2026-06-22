@@ -10,7 +10,7 @@
 - Tailwind CSS
 - EmulatorJS
 - Node.js Vite 中间件
-- 可选本地 AI 引擎：Stockfish、Pikafish、Rapfi、KataGo、DouZero
+- 可选本地 AI 引擎：Stockfish、Pikafish、Rapfi、KataGo、Connect6 KataGo、YaneuraOu、DouZero、Texas AI
 
 ## 快速开始
 
@@ -127,6 +127,14 @@ engines/
     katago.exe
     gtp.cfg
     model.bin.gz
+  connect6-katago/
+    katago.exe
+    engine.cfg
+    connectsix19x_b18_20250801.bin.gz
+  yaneuraou/
+    YaneuraOu.exe
+    eval/
+      model.onnx
   douzero/
     douzero_ADP/
       landlord.ckpt
@@ -238,6 +246,61 @@ KATAGO_MODEL=/absolute/path/to/model.bin.gz
 
 ```text
 /api/katago/status
+```
+
+### Connect6 KataGo
+
+用途：六子棋 AI。
+
+六子棋使用单独的 KataGo / KataGomo 引擎目录，避免和围棋 KataGo 的模型、配置混用。至少需要三个文件：
+
+- 可执行文件：如 `katago.exe`、`katagomo.exe`、`katago-opencl.exe`
+- GTP 配置：如 `engine.cfg`、`gtp.cfg`、`default_gtp.cfg`、`analysis.cfg`
+- 六子棋模型：如 `connectsix19x_b18_20250801.bin.gz`、`model.bin.gz`、`network.bin.gz`
+
+推荐放置：
+
+```text
+engines/connect6-katago/katago.exe
+engines/connect6-katago/engine.cfg
+engines/connect6-katago/connectsix19x_b18_20250801.bin.gz
+```
+
+也可以通过环境变量指定：
+
+```bash
+CONNECT6_KATAGO_EXECUTABLE=/absolute/path/to/katago
+CONNECT6_KATAGO_CONFIG=/absolute/path/to/engine.cfg
+CONNECT6_KATAGO_MODEL=/absolute/path/to/connectsix19x_b18_20250801.bin.gz
+```
+
+状态接口：
+
+```text
+/api/connect6-katago/status
+```
+
+### YaneuraOu
+
+用途：日本将棋 AI。
+
+下载 YaneuraOu 后，将可执行文件和评估模型放到：
+
+```text
+engines/yaneuraou/YaneuraOu.exe
+engines/yaneuraou/eval/model.onnx
+```
+
+项目会在 `engines/yaneuraou/` 和 `engines/YaneuraOu/` 中查找常见的 YaneuraOu 可执行文件名，也可以通过环境变量指定：
+
+```bash
+YANEURAOU_EXECUTABLE=/absolute/path/to/YaneuraOu
+```
+
+状态接口：
+
+```text
+/api/yaneuraou/status
 ```
 
 ### DouZero
