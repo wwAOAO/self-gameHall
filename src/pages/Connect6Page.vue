@@ -1,12 +1,14 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useGomoku } from '@/composables/useGomoku';
+import { useConnect6 } from '@/composables/useConnect6';
 import { ArrowLeft, Play, RotateCcw } from 'lucide-vue-next';
 
 const router = useRouter();
-const game = useGomoku();
+const game = useConnect6();
 const canvasRef = ref<HTMLCanvasElement | null>(null);
+
+let renderRaf: number | null = null;
 
 function renderLoop() {
     const canvas = canvasRef.value;
@@ -15,8 +17,6 @@ function renderLoop() {
     if (!ctx) return;
     game.draw(ctx);
 }
-
-let renderRaf: number | null = null;
 
 function startRender() {
     renderLoop();
@@ -32,28 +32,26 @@ onUnmounted(() => {
     game.clearAITimer();
 });
 
-function handleCanvasClick(e: MouseEvent) {
+function getCanvasPoint(e: MouseEvent) {
     const canvas = canvasRef.value;
-    if (!canvas) return;
+    if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const mx = (e.clientX - rect.left) * scaleX;
-    const my = (e.clientY - rect.top) * scaleY;
+    return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height),
+    };
+}
 
-    if (game.gameStatus.value === 'idle') return;
-    game.handleClick(mx, my);
+function handleCanvasClick(e: MouseEvent) {
+    const point = getCanvasPoint(e);
+    if (!point || game.gameStatus.value === 'idle') return;
+    game.handleClick(point.x, point.y);
 }
 
 function handleCanvasMove(e: MouseEvent) {
-    const canvas = canvasRef.value;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const mx = (e.clientX - rect.left) * scaleX;
-    const my = (e.clientY - rect.top) * scaleY;
-    game.handleHover(mx, my);
+    const point = getCanvasPoint(e);
+    if (!point) return;
+    game.handleHover(point.x, point.y);
 }
 
 function handleCanvasLeave() {
@@ -63,7 +61,7 @@ function handleCanvasLeave() {
 
 <template>
     <div
-        class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 flex flex-col select-none overflow-hidden"
+        class="min-h-screen bg-gradient-to-br from-stone-950 via-slate-900 to-zinc-900 flex flex-col select-none overflow-hidden"
         style="height: 100dvh"
     >
         <header class="shrink-0 pt-3 pb-1 w-full max-w-3xl mx-auto px-3">
@@ -74,34 +72,39 @@ function handleCanvasLeave() {
                 >
                     <ArrowLeft class="w-4 h-4" /> 返回
                 </button>
-                <h1 class="text-lg sm:text-xl font-bold tracking-tight flex-1 text-center mr-10">
-                    <span class="bg-gradient-to-r from-amber-500 to-yellow-600 bg-clip-text text-transparent"
-                        >五子棋</span
+                <h1 class="text-lg sm:text-xl font-bold tracking-normal flex-1 text-center mr-10">
+                    <span
+                        class="bg-gradient-to-r from-stone-100 via-amber-300 to-stone-800 bg-clip-text text-transparent"
                     >
-                    <span class="text-gray-600 text-base ml-2">Gomoku</span>
+                        六子棋
+                    </span>
+                    <span class="text-gray-600 text-base ml-2">Connect6</span>
                 </h1>
             </div>
         </header>
 
         <main
             class="flex-1 flex flex-col items-center overflow-hidden px-2"
-            style="max-width: 600px; margin: 0 auto; width: 100%"
+            style="max-width: 640px; margin: 0 auto; width: 100%"
         >
             <div
-                class="shrink-0 flex items-center gap-4 bg-gray-800/60 rounded-xl px-4 py-1.5 border border-gray-700/50 text-sm mb-1"
+                class="shrink-0 flex items-center gap-3 bg-gray-800/60 rounded-lg px-4 py-1.5 border border-gray-700/50 text-sm mb-1"
             >
                 <div class="flex items-center gap-1.5">
                     <div
                         class="w-3 h-3 rounded-full"
                         :class="
                             game.currentPlayer.value === 1
-                                ? 'bg-gray-900 border border-gray-600'
+                                ? 'bg-gray-950 border border-gray-600'
                                 : 'bg-white border border-gray-500'
                         "
                     ></div>
                     <span class="text-gray-300 font-medium">{{ game.message.value }}</span>
                 </div>
                 <div class="h-4 w-px bg-gray-700/80"></div>
+                <span class="text-xs text-amber-200">
+                    {{ game.stonesThisTurn.value }}/{{ game.stonesRequiredThisTurn.value }}
+                </span>
                 <span
                     class="text-xs font-medium"
                     :class="game.difficulty.value === 'hard' ? 'text-amber-300' : 'text-emerald-300'"
@@ -127,19 +130,16 @@ function handleCanvasLeave() {
 
                     <div
                         v-if="game.gameStatus.value === 'idle'"
-                        class="absolute inset-0 flex items-center justify-center bg-black/40 rounded pointer-events-none"
+                        class="absolute inset-0 flex items-center justify-center bg-black/45 rounded pointer-events-none"
                     >
-                        <div class="text-center pointer-events-auto">
-                            <p v-if="game.playerColor.value === 1" class="text-gray-300 text-sm mb-1">
-                                你选择先手（黑棋）
-                            </p>
-                            <p v-else class="text-gray-300 text-sm mb-1">你选择后手（白棋）</p>
+                        <div class="text-center pointer-events-auto px-3">
+                            <p class="text-gray-300 text-sm mb-1">黑棋第一手下一子，之后双方每回合下两子</p>
                             <div class="flex gap-2 mb-3 justify-center">
                                 <button
                                     class="px-3 py-1 rounded text-xs font-medium"
                                     :class="
                                         game.playerColor.value === 1
-                                            ? 'bg-gray-900 text-white ring-2 ring-amber-400'
+                                            ? 'bg-gray-950 text-white ring-2 ring-amber-400'
                                             : 'bg-gray-700 text-gray-400'
                                     "
                                     @click="game.playerColor.value = 1"
@@ -183,7 +183,7 @@ function handleCanvasLeave() {
                                 </button>
                             </div>
                             <button
-                                class="flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-sm font-medium bg-amber-700 hover:bg-amber-600 text-white transition-all duration-200 active:scale-95 shadow-lg shadow-amber-700/30"
+                                class="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-lg text-sm font-medium bg-amber-700 hover:bg-amber-600 text-white transition-all duration-200 active:scale-95 shadow-lg shadow-amber-700/30"
                                 @click="game.startGame()"
                             >
                                 <Play class="w-4 h-4" /> 开始游戏
@@ -227,16 +227,9 @@ function handleCanvasLeave() {
                 class="shrink-0 h-12 text-gray-500 text-xs text-center leading-relaxed pb-3"
                 :class="game.gameStatus.value === 'idle' ? 'visible' : 'invisible'"
             >
-                <p>💡 点击棋盘交叉点落子</p>
-                <p>横竖斜任意方向连成五子即获胜</p>
+                <p>点击棋盘交叉点落子</p>
+                <p>横竖斜任意方向连成六子即获胜</p>
             </div>
         </main>
     </div>
 </template>
-
-
-
-
-
-
-

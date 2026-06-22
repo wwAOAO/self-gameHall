@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+﻿import { createRouter, createWebHistory } from 'vue-router';
 import GameHub from '@/pages/GameHub.vue';
 import MinesweeperPage from '@/pages/MinesweeperPage.vue';
 import SnakePage from '@/pages/SnakePage.vue';
@@ -13,6 +13,8 @@ import ChineseChessPage from '@/pages/ChineseChessPage.vue';
 import ChineseChessLanPage from '@/pages/ChineseChessLanPage.vue';
 import KlondikePage from '@/pages/KlondikePage.vue';
 import GomokuPage from '@/pages/GomokuPage.vue';
+import Connect6Page from '@/pages/Connect6Page.vue';
+import SixPieceChessPage from '@/pages/SixPieceChessPage.vue';
 import FlappyBirdPage from '@/pages/FlappyBirdPage.vue';
 import JumpJumpPage from '@/pages/JumpJumpPage.vue';
 import MahjongPage from '@/pages/MahjongPage.vue';
@@ -21,13 +23,15 @@ import LudoPage from '@/pages/LudoPage.vue';
 import MilitaryChessPage from '@/pages/MilitaryChessPage.vue';
 import GoPage from '@/pages/GoPage.vue';
 import InternationalChessPage from '@/pages/InternationalChessPage.vue';
+import JapaneseShogiPage from '@/pages/JapaneseShogiPage.vue';
 import TexasHoldemPage from '@/pages/TexasHoldemPage.vue';
 import BlackjackPage from '@/pages/BlackjackPage.vue';
 import Game2048Page from '@/pages/Game2048Page.vue';
 import UnoLanPage from '@/pages/UnoLanPage.vue';
-import MahjongLanPage from '@/pages/MahjongLanPage.vue';
 import FightLandlordLanPage from '@/pages/FightLandlordLanPage.vue';
 import GomokuLanPage from '@/pages/GomokuLanPage.vue';
+import ReversiPage from '@/pages/ReversiPage.vue';
+import CheckersPage from '@/pages/CheckersPage.vue';
 
 const routes = [
     {
@@ -106,9 +110,29 @@ const routes = [
         component: GomokuPage,
     },
     {
+        path: '/connect6',
+        name: 'connect6',
+        component: Connect6Page,
+    },
+    {
+        path: '/six-piece-chess',
+        name: 'six-piece-chess',
+        component: SixPieceChessPage,
+    },
+    {
         path: '/gomoku-lan',
         name: 'gomoku-lan',
         component: GomokuLanPage,
+    },
+    {
+        path: '/reversi',
+        name: 'reversi',
+        component: ReversiPage,
+    },
+    {
+        path: '/checkers',
+        name: 'checkers',
+        component: CheckersPage,
     },
     {
         path: '/flappy',
@@ -124,11 +148,6 @@ const routes = [
         path: '/mahjong',
         name: 'mahjong',
         component: MahjongPage,
-    },
-    {
-        path: '/mahjong-lan',
-        name: 'mahjong-lan',
-        component: MahjongLanPage,
     },
     {
         path: '/billiards',
@@ -154,6 +173,11 @@ const routes = [
         path: '/international-chess',
         name: 'international-chess',
         component: InternationalChessPage,
+    },
+    {
+        path: '/japanese-shogi',
+        name: 'japanese-shogi',
+        component: JapaneseShogiPage,
     },
     {
         path: '/texas-holdem',
@@ -203,3 +227,5 @@ const router = createRouter({
 });
 
 export default router;
+
+

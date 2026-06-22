@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { Gamepad2, Play } from 'lucide-vue-next';
@@ -9,7 +9,7 @@ const games = [
     {
         id: 'minesweeper',
         name: '扫雷',
-        desc: '经典排雷，推理每一次点击',
+        desc: '经典排雷，推理每一次点击。',
         emoji: '💣',
         tag: '逻辑',
         accent: 'from-cyan-400 to-blue-500',
@@ -18,7 +18,7 @@ const games = [
     {
         id: 'snake',
         name: '贪吃蛇',
-        desc: '吃掉食物，挑战更长身位',
+        desc: '吃掉食物，挑战更长身位。',
         emoji: '🐍',
         tag: '反应',
         accent: 'from-lime-400 to-emerald-500',
@@ -27,8 +27,8 @@ const games = [
     {
         id: 'tetris',
         name: '俄罗斯方块',
-        desc: '旋转、堆叠、消除整行',
-        emoji: '🧩',
+        desc: '旋转、堆叠、消除整行。',
+        emoji: '🧱',
         tag: '街机',
         accent: 'from-fuchsia-400 to-violet-500',
         surface: 'bg-fuchsia-500/10 text-fuchsia-100 ring-fuchsia-300/20',
@@ -36,7 +36,7 @@ const games = [
     {
         id: 'goldminer',
         name: '黄金矿工',
-        desc: '抓取黄金，达成关卡目标',
+        desc: '抓取黄金，达成关卡目标。',
         emoji: '⛏️',
         tag: '休闲',
         accent: 'from-yellow-300 to-amber-500',
@@ -45,7 +45,7 @@ const games = [
     {
         id: 'tank',
         name: '坦克大战',
-        desc: '守住基地，击退敌方坦克',
+        desc: '守住基地，击退敌方坦克。',
         emoji: '🎮',
         tag: '射击',
         accent: 'from-red-400 to-rose-500',
@@ -54,7 +54,7 @@ const games = [
     {
         id: 'spider',
         name: '蜘蛛纸牌',
-        desc: '同花顺序收牌，完成整理',
+        desc: '同花顺序收牌，完成整列。',
         emoji: '🕷️',
         tag: '纸牌',
         accent: 'from-teal-300 to-cyan-500',
@@ -63,7 +63,7 @@ const games = [
     {
         id: 'fight',
         name: '斗地主',
-        desc: '叫地主、抢先出完手牌',
+        desc: '叫地主、抢先出完手牌。',
         emoji: '🃏',
         tag: '对战',
         accent: 'from-orange-400 to-red-500',
@@ -72,7 +72,7 @@ const games = [
     {
         id: 'fight-lan',
         name: '斗地主局域网',
-        desc: '创建三人房间，和同一局域网里的朋友叫分出牌',
+        desc: '创建三人房间，和同一局域网里的朋友叫分出牌。',
         emoji: 'fight-lan-mark',
         tag: '对战',
         accent: 'from-amber-300 via-orange-400 to-red-500',
@@ -81,7 +81,7 @@ const games = [
     {
         id: 'sokoban',
         name: '推箱子',
-        desc: '把箱子推到目标点位',
+        desc: '把箱子推到目标点位。',
         emoji: '📦',
         tag: '解谜',
         accent: 'from-stone-300 to-orange-500',
@@ -90,7 +90,7 @@ const games = [
     {
         id: 'sudoku',
         name: '数独',
-        desc: '填满九宫格，保持数字唯一',
+        desc: '填满九宫格，保持数字唯一。',
         emoji: '🔢',
         tag: '数字',
         accent: 'from-indigo-300 to-sky-500',
@@ -99,7 +99,7 @@ const games = [
     {
         id: 'chess',
         name: '中国象棋',
-        desc: '楚河汉界，和电脑一决高下',
+        desc: '楚河汉界，和电脑一决高下。',
         emoji: '♟️',
         tag: '棋类',
         accent: 'from-red-300 to-amber-500',
@@ -108,7 +108,7 @@ const games = [
     {
         id: 'chess-lan',
         name: '中国象棋局域网',
-        desc: '创建双人房间，和同一局域网里的朋友红黑对弈',
+        desc: '创建双人房间，和同一局域网里的朋友红黑对弈。',
         emoji: '♟️',
         tag: '对战',
         accent: 'from-red-300 via-amber-300 to-stone-600',
@@ -117,7 +117,7 @@ const games = [
     {
         id: 'klondike',
         name: '接龙',
-        desc: '红黑交替排序，归位四花色',
+        desc: '红黑交替排序，归位四种花色。',
         emoji: '♥️',
         tag: '纸牌',
         accent: 'from-emerald-300 to-green-500',
@@ -126,26 +126,61 @@ const games = [
     {
         id: 'gomoku',
         name: '五子棋',
-        desc: '连成五子，抢占关键棋位',
+        desc: '连成五子，抢占关键棋位。',
         emoji: '⚫',
         tag: '棋类',
         accent: 'from-neutral-200 to-yellow-500',
         surface: 'bg-neutral-500/10 text-neutral-100 ring-neutral-300/20',
     },
     {
+        id: 'connect6',
+        name: '六子棋',
+        desc: '首手一子，其后双子落盘，连成六子取胜。',
+        emoji: '●',
+        tag: '棋类',
+        accent: 'from-stone-100 via-amber-300 to-stone-700',
+        surface: 'bg-stone-500/10 text-stone-100 ring-amber-300/20',
+    },
+    {
+        id: 'six-piece-chess',
+        name: '六子炮',
+        desc: '十二点民间棋，移子跳吃，把对方逼到只剩一子。',
+        emoji: '🔴',
+        tag: '棋类',
+        accent: 'from-red-300 via-amber-300 to-blue-500',
+        surface: 'bg-red-500/10 text-red-100 ring-red-300/20',
+    },    {
         id: 'gomoku-lan',
         name: '五子棋局域网',
-        desc: '创建双人房间，和同一局域网里的朋友黑白对弈',
+        desc: '创建双人房间，和同一局域网里的朋友黑白对弈。',
         emoji: '⚫',
         tag: '对战',
         accent: 'from-neutral-100 via-amber-300 to-stone-600',
         surface: 'bg-amber-500/10 text-amber-100 ring-amber-300/20',
     },
     {
+        id: 'reversi',
+        name: '黑白棋',
+        desc: '夹击翻转棋子，占据角落赢下棋盘。',
+        emoji: '◐',
+        tag: '棋类',
+        accent: 'from-emerald-300 to-neutral-100',
+        surface: 'bg-emerald-500/10 text-emerald-100 ring-emerald-300/20',
+    },
+    {
+        id: 'checkers',
+        name: '西洋跳棋',
+        desc: '斜向推进、强制跳吃，升王后反攻棋盘。',
+        emoji: '⛀',
+        tag: '棋类',
+        accent: 'from-red-300 to-amber-500',
+        surface: 'bg-red-500/10 text-red-100 ring-red-300/20',
+    },
+    {
         id: 'flappy',
         name: '像素鸟',
-        desc: '轻点起飞，穿过管道间隙',
-        emoji: '🐦',
+        desc: '轻点起飞，穿过管道间隙。',
+        emoji: '🐤',
         tag: '轻量',
         accent: 'from-sky-300 to-blue-500',
         surface: 'bg-sky-500/10 text-sky-100 ring-sky-300/20',
@@ -153,7 +188,7 @@ const games = [
     {
         id: 'jump',
         name: '跳一跳',
-        desc: '蓄力跳跃，落在下个方块',
+        desc: '蓄力跳跃，落在下一个方块。',
         emoji: '🎯',
         tag: '技巧',
         accent: 'from-pink-300 to-purple-500',
@@ -162,25 +197,16 @@ const games = [
     {
         id: 'mahjong',
         name: '麻将',
-        desc: '四人牌局，摸打碰杠胡',
+        desc: '四人牌局，摸打碰杠胡。',
         emoji: '🀄',
         tag: '国风',
         accent: 'from-green-300 to-emerald-500',
         surface: 'bg-emerald-500/10 text-emerald-100 ring-emerald-300/20',
     },
     {
-        id: 'mahjong-lan',
-        name: '麻将局域网',
-        desc: '创建房间码，和同一局域网里的朋友轮流摸打胡牌',
-        emoji: '🀄',
-        tag: '对战',
-        accent: 'from-emerald-300 via-yellow-300 to-lime-500',
-        surface: 'bg-emerald-500/10 text-emerald-100 ring-emerald-300/20',
-    },
-    {
         id: 'billiards',
         name: '台球',
-        desc: '拖拽瞄准，完成清台挑战',
+        desc: '拖拽瞄准，完成清台挑战。',
         emoji: '🎱',
         tag: '体育',
         accent: 'from-lime-300 to-teal-500',
@@ -189,7 +215,7 @@ const games = [
     {
         id: 'ludo',
         name: '飞行棋',
-        desc: '四方竞速，先抵达终点',
+        desc: '四方竞速，先抵达终点。',
         emoji: '✈️',
         tag: '桌游',
         accent: 'from-sky-300 to-amber-400',
@@ -198,8 +224,8 @@ const games = [
     {
         id: 'military',
         name: '四人军棋',
-        desc: '蓝方出战，红绿黄三方AI混战',
-        emoji: '🚩',
+        desc: '蓝方出战，红绿黄三方 AI 混战。',
+        emoji: '🎖',
         tag: '策略',
         accent: 'from-blue-300 to-red-500',
         surface: 'bg-blue-500/10 text-blue-100 ring-blue-300/20',
@@ -207,8 +233,8 @@ const games = [
     {
         id: 'go',
         name: '围棋',
-        desc: '十九路棋盘，围地提子，和电脑对弈',
-        emoji: '⚫',
+        desc: '十九路棋盘，围地提子，和电脑对弈。',
+        emoji: '⚪',
         tag: '棋类',
         accent: 'from-amber-200 to-emerald-500',
         surface: 'bg-amber-500/10 text-amber-100 ring-amber-300/20',
@@ -216,25 +242,34 @@ const games = [
     {
         id: 'international-chess',
         name: '国际象棋',
-        desc: '标准西洋棋规则，和电脑对弈一局',
+        desc: '标准西洋棋规则，和电脑对弈一局。',
         emoji: '♞',
         tag: '棋类',
         accent: 'from-stone-200 to-emerald-500',
         surface: 'bg-stone-500/10 text-stone-100 ring-stone-300/20',
     },
     {
+        id: 'japanese-shogi',
+        name: '日本将棋',
+        desc: '9x9 本将棋，同屏对弈，持驹打入与升变。',
+        emoji: '☖',
+        tag: '棋类',
+        accent: 'from-amber-200 to-red-500',
+        surface: 'bg-amber-500/10 text-amber-100 ring-amber-300/20',
+    },
+    {
         id: 'texas-holdem',
         name: '德州扑克',
-        desc: '四人牌桌，下注、加注、摊牌比拼最佳五张',
-        emoji: '♠️',
+        desc: '四人牌桌，下盲、加注、摊牌比拼最佳五张。',
+        emoji: '♣️',
         tag: '纸牌',
         accent: 'from-emerald-300 to-amber-500',
         surface: 'bg-emerald-500/10 text-emerald-100 ring-emerald-300/20',
     },
     {
         id: 'blackjack',
-        name: '黑杰克 / 21点',
-        desc: '下注、要牌、停牌，和庄家比谁更接近 21 点',
+        name: '黑杰克 / 21 点',
+        desc: '下注、要牌、停牌，和庄家比谁更接近 21 点。',
         emoji: '🂡',
         tag: '纸牌',
         accent: 'from-amber-300 to-emerald-500',
@@ -243,7 +278,7 @@ const games = [
     {
         id: 'uno',
         name: 'UNO 局域网',
-        desc: '创建房间码，和同一局域网里的朋友轮流出牌',
+        desc: '创建房间码，和同一局域网里的朋友轮流出牌。',
         emoji: 'uno-mark',
         tag: '对战',
         accent: 'from-red-400 via-yellow-300 to-blue-500',
@@ -252,8 +287,8 @@ const games = [
     {
         id: '2048',
         name: '2048',
-        desc: '滑动合并数字方块，冲击 2048 与更高分',
-        emoji: '🧮',
+        desc: '滑动合并数字方块，冲击 2048 与更高分。',
+        emoji: '🎴',
         tag: '数字',
         accent: 'from-teal-300 to-amber-400',
         surface: 'bg-teal-500/10 text-teal-100 ring-teal-300/20',
@@ -261,8 +296,8 @@ const games = [
     {
         id: 'fc',
         name: 'FC 游戏',
-        desc: '载入 .nes 卡带，重温红白机经典玩法',
-        emoji: '🎮',
+        desc: '载入 .nes 卡带，重温红白机经典玩法。',
+        emoji: '🕹',
         tag: '模拟器',
         accent: 'from-cyan-300 to-emerald-500',
         surface: 'bg-cyan-500/10 text-cyan-100 ring-cyan-300/20',
@@ -270,8 +305,8 @@ const games = [
     {
         id: 'gba',
         name: 'GBA 游戏',
-        desc: '载入 .gba 卡带，掌机经典在浏览器里继续开局',
-        emoji: '🎮',
+        desc: '载入 .gba 卡带，掌机经典在浏览器里继续开局。',
+        emoji: '🕹',
         tag: '模拟器',
         accent: 'from-violet-300 to-cyan-500',
         surface: 'bg-violet-500/10 text-violet-100 ring-violet-300/20',
@@ -544,3 +579,4 @@ const gameCount = computed(() => games.length);
     background: linear-gradient(145deg, #86efac, #16a34a);
 }
 </style>
+

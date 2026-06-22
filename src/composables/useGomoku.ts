@@ -1,4 +1,4 @@
-import { ref, onUnmounted } from 'vue';
+﻿import { ref, onUnmounted } from 'vue';
 
 const BOARD_SIZE = 15;
 const CELL_SIZE = 36;
@@ -1137,7 +1137,7 @@ export function useGomoku() {
         ctx.textBaseline = 'top';
         for (let i = 0; i < BOARD_SIZE; i++) {
             ctx.fillText(String.fromCharCode(65 + i), PADDING + i * CELL_SIZE, 2);
-            ctx.fillText(`${BOARD_SIZE - i}`, 2, PADDING + i * CELL_SIZE - 5);
+            ctx.fillText(`${BOARD_SIZE - i}`, 10, PADDING + i * CELL_SIZE - 5);
         }
     }
 
@@ -1173,3 +1173,4 @@ export function useGomoku() {
         clearAITimer,
     };
 }
+
