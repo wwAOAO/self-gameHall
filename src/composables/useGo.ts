@@ -410,7 +410,7 @@ export function useGo() {
                 if (gameStatus.value !== 'playing' || currentPlayer.value !== aiColor.value) return;
                 const positionSnapshot = boardKey(board.value);
                 const historySnapshot = [...moveHistory.value];
-                message.value = 'KataGo 思考中，首次启动可能需要调校 GPU...';
+                message.value = 'AI 思考中';
                 const engineResult = await findKataGoMove(historySnapshot, aiColor.value, 1200);
                 const engineMove = engineResult.move;
                 if (gameStatus.value !== 'playing' || currentPlayer.value !== aiColor.value) return;
