@@ -186,6 +186,9 @@ def choose_action(payload):
     pot = max(1, int(payload.get("pot") or 0))
     chips = int(payload.get("chips") or 0)
     min_raise = max(20, int(payload.get("minRaise") or 20))
+    current_bet = int(payload.get("currentBet") or 0)
+    min_raise_to = int(payload.get("minRaiseTo") or (current_bet + min_raise))
+    max_raise_to = int(payload.get("maxRaiseTo") or (current_bet + chips))
     phase = payload.get("phase") or "preflop"
     opponent_count = max(1, int(payload.get("opponentCount") or 1))
 
@@ -195,14 +198,19 @@ def choose_action(payload):
     pot_odds = call_amount / max(1.0, pot + call_amount)
 
     can_raise = "raise" in legal and chips > call_amount + min_raise
+    can_all_in = "all-in" in legal and chips > 0
     can_check = "check" in legal
     can_call = "call" in legal
     can_fold = "fold" in legal
 
     aggression = strength - pressure + (0.04 if opponent_count <= 1 else 0)
+    if can_all_in and (strength >= 0.92 or (chips <= call_amount + min_raise and strength > pot_odds + 0.22)):
+        return {"action": "all-in", "amount": int(chips), "source": "texas-ai-monte-carlo", "strength": strength}
+
     if can_raise and (strength >= 0.78 or (call_amount == 0 and strength >= 0.62 and random.random() < 0.35)):
         scale = 4 if strength >= 0.9 else 2
-        amount = min(max(min_raise, min_raise * scale), max(min_raise, chips - call_amount))
+        raise_by = min(max(min_raise, min_raise * scale), max(min_raise, chips - call_amount))
+        amount = min(max_raise_to, max(min_raise_to, current_bet + raise_by))
         return {"action": "raise", "amount": int(amount), "source": "texas-ai-monte-carlo", "strength": strength}
 
     if call_amount > 0:

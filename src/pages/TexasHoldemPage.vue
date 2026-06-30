@@ -1,14 +1,31 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTexasHoldem, type PokerCard, type PokerPlayer } from '@/composables/useTexasHoldem';
 import { ArrowLeft, Bot, Coins, Crown, Play, RotateCcw, Sparkles, Trophy, UserRound } from 'lucide-vue-next';
 
 const router = useRouter();
 const game = useTexasHoldem();
+const raiseAmount = ref(40);
 
 const revealOpponents = computed(() => game.phase.value === 'showdown' || game.phase.value === 'ended');
 const userBestHand = computed(() => game.getBestHandForPlayer(0));
+const normalizedRaiseAmount = computed(() => {
+    if (!game.canRaise.value) return 0;
+    return Math.min(game.maxUserRaise.value, Math.max(game.minUserRaise.value, Math.floor(raiseAmount.value || 0)));
+});
+
+watch(
+    [game.minUserRaise, game.maxUserRaise, game.canRaise],
+    () => {
+        if (!game.canRaise.value) {
+            raiseAmount.value = game.minUserRaise.value;
+            return;
+        }
+        raiseAmount.value = normalizedRaiseAmount.value || game.minUserRaise.value;
+    },
+    { immediate: true },
+);
 
 function suitLabel(suit: string): string {
     const labels: Record<string, string> = {
@@ -50,12 +67,22 @@ function winnerText(player: PokerPlayer): string {
 
 function playerHandLabel(player: PokerPlayer): string {
     if (player.folded) return '已弃牌';
+    if (player.chips === 0 && player.hand.length > 0 && game.phase.value !== 'idle') return 'All in';
     if (game.phase.value === 'showdown') {
         const best = game.getBestHandForPlayer(player.id);
         return best?.label || '等待摊牌';
     }
     if (player.id === 0) return userBestHand.value?.label || '等待公共牌';
     return '手牌保密';
+}
+
+function raiseText(): string {
+    return game.canRaise.value ? `加注到 ${normalizedRaiseAmount.value}` : `加注到 ${game.minUserRaise.value}`;
+}
+
+function commitRaise() {
+    if (!game.canRaise.value) return;
+    game.playerRaiseTo(normalizedRaiseAmount.value);
 }
 </script>
 
@@ -112,6 +139,17 @@ function playerHandLabel(player: PokerPlayer): string {
                         <Sparkles class="h-4 w-4 text-emerald-200" />
                         <span>{{ game.message.value }}</span>
                     </div>
+
+                    <div v-if="game.sidePots.value.length > 1" class="side-pot-row">
+                        <span v-for="(sidePot, index) in game.sidePots.value" :key="index" class="side-pot-chip">
+                            {{ index === 0 ? '主池' : `边池${index}` }} {{ sidePot.amount }} ·
+                            {{ sidePot.eligibleNames.join(' / ') }}
+                        </span>
+                    </div>
+
+                    <div v-if="game.burnedCards.value.length > 0" class="burn-note">
+                        Burn {{ game.burnedCards.value.length }}
+                    </div>
                 </div>
 
                 <article
@@ -165,6 +203,9 @@ function playerHandLabel(player: PokerPlayer): string {
                     <div class="chip-line">
                         <span><Coins class="h-3.5 w-3.5" /> {{ player.chips }}</span>
                         <span v-if="player.bet > 0" class="bet-chip">下注 {{ player.bet }}</span>
+                        <span v-if="player.chips === 0 && player.hand.length > 0 && !player.folded" class="all-in-chip">
+                            All in
+                        </span>
                         <span v-if="game.isWinner(player.id)" class="win-chip">
                             <Trophy class="h-3.5 w-3.5" />
                             {{ winnerText(player) }}
@@ -230,20 +271,32 @@ function playerHandLabel(player: PokerPlayer): string {
             <template v-else-if="game.currentPlayer.value === 0 && !game.user.value.folded">
                 <button class="danger-action" @click="game.playerFold()">弃牌</button>
                 <button class="secondary-action" @click="game.playerCallOrCheck()">{{ actionText() }}</button>
-                <button
-                    class="primary-action"
-                    :disabled="game.user.value.chips <= game.callAmount.value"
-                    @click="game.playerRaise(40)"
-                >
-                    加注 40
+                <div class="raise-control" :class="{ disabled: !game.canRaise.value }">
+                    <input
+                        v-model.number="raiseAmount"
+                        class="raise-input"
+                        type="number"
+                        inputmode="numeric"
+                        :min="game.minUserRaise.value"
+                        :max="game.maxUserRaise.value"
+                        :step="game.minUserRaise.value"
+                        :disabled="!game.canRaise.value"
+                    />
+                    <input
+                        v-model.number="raiseAmount"
+                        class="raise-slider"
+                        type="range"
+                        :min="game.minUserRaise.value"
+                        :max="game.maxUserRaise.value"
+                        :step="game.minUserRaise.value"
+                        :disabled="!game.canRaise.value"
+                    />
+                    <span>{{ game.canRaise.value ? `到 ${game.minUserRaise.value}-${game.maxUserRaise.value}` : '筹码不足' }}</span>
+                </div>
+                <button class="primary-action" :disabled="!game.canRaise.value" @click="commitRaise()">
+                    {{ raiseText() }}
                 </button>
-                <button
-                    class="primary-action"
-                    :disabled="game.user.value.chips <= game.callAmount.value + 80"
-                    @click="game.playerRaise(80)"
-                >
-                    加注 80
-                </button>
+                <button class="all-in-action" :disabled="!game.canAllIn.value" @click="game.playerAllIn()">All in</button>
             </template>
             <template v-else>
                 <div class="waiting-pill">
@@ -284,7 +337,8 @@ function playerHandLabel(player: PokerPlayer): string {
 .nav-button,
 .primary-action,
 .secondary-action,
-.danger-action {
+.danger-action,
+.all-in-action {
     min-height: 38px;
     display: inline-flex;
     align-items: center;
@@ -512,6 +566,47 @@ function playerHandLabel(player: PokerPlayer): string {
     font-weight: 800;
 }
 
+.side-pot-row {
+    width: min(390px, 100%);
+    min-height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.side-pot-chip {
+    min-height: 22px;
+    max-width: min(360px, 100%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid rgba(253, 230, 138, 0.22);
+    background: rgba(67, 20, 7, 0.5);
+    color: #fde68a;
+    padding: 3px 7px;
+    font-size: 11px;
+    font-weight: 850;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.burn-note {
+    min-height: 20px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(15, 23, 42, 0.36);
+    color: rgba(226, 232, 240, 0.58);
+    padding: 2px 7px;
+    font-size: 10px;
+    font-weight: 850;
+}
+
 .player-seat {
     position: relative;
     z-index: 2;
@@ -618,6 +713,7 @@ function playerHandLabel(player: PokerPlayer): string {
 .dealer-chip,
 .blind-chip,
 .bet-chip,
+.all-in-chip,
 .win-chip {
     display: inline-flex;
     align-items: center;
@@ -695,6 +791,12 @@ function playerHandLabel(player: PokerPlayer): string {
     background: #86efac;
 }
 
+.all-in-chip {
+    padding: 3px 6px;
+    color: #431407;
+    background: #fcd34d;
+}
+
 .info-strip {
     width: min(1100px, 100%);
     margin: 0 auto;
@@ -744,6 +846,50 @@ function playerHandLabel(player: PokerPlayer): string {
     flex-wrap: wrap;
 }
 
+.raise-control {
+    width: min(230px, calc(100vw - 28px));
+    min-height: 44px;
+    display: grid;
+    grid-template-columns: 72px minmax(86px, 1fr);
+    grid-template-rows: 22px 18px;
+    gap: 3px 8px;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid rgba(209, 250, 229, 0.13);
+    background: rgba(5, 24, 28, 0.52);
+    padding: 6px 8px;
+}
+
+.raise-control.disabled {
+    opacity: 0.5;
+}
+
+.raise-input {
+    width: 72px;
+    height: 34px;
+    grid-row: 1 / span 2;
+    border-radius: 7px;
+    border: 1px solid rgba(253, 230, 138, 0.25);
+    background: rgba(15, 23, 42, 0.58);
+    color: #fef3c7;
+    padding: 0 7px;
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.raise-slider {
+    width: 100%;
+    min-width: 0;
+    accent-color: #34d399;
+}
+
+.raise-control span {
+    color: rgba(226, 232, 240, 0.62);
+    font-size: 10px;
+    font-weight: 800;
+    text-align: center;
+}
+
 .limit-note {
     min-height: 32px;
     display: inline-flex;
@@ -776,6 +922,13 @@ function playerHandLabel(player: PokerPlayer): string {
     border: 1px solid rgba(252, 165, 165, 0.24);
 }
 
+.all-in-action {
+    color: #431407;
+    background: linear-gradient(145deg, #fde68a, #f59e0b);
+    border: 1px solid rgba(253, 230, 138, 0.58);
+    box-shadow: 0 12px 24px rgba(245, 158, 11, 0.18);
+}
+
 .primary-action.wide {
     min-width: 148px;
 }
@@ -783,12 +936,15 @@ function playerHandLabel(player: PokerPlayer): string {
 .primary-action:hover,
 .secondary-action:hover,
 .danger-action:hover,
+.all-in-action:hover,
 .nav-button:hover {
     filter: brightness(1.06);
     transform: translateY(-1px);
 }
 
-.primary-action:disabled {
+.primary-action:disabled,
+.secondary-action:disabled,
+.all-in-action:disabled {
     opacity: 0.42;
     cursor: not-allowed;
     transform: none;

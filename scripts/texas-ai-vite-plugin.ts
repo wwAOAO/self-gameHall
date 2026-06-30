@@ -10,6 +10,8 @@ interface TexasAIRequest {
     pot?: number;
     callAmount?: number;
     minRaise?: number;
+    minRaiseTo?: number;
+    maxRaiseTo?: number;
     chips?: number;
     opponentCount?: number;
     legalActions?: string[];

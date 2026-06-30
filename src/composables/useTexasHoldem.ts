@@ -14,6 +14,7 @@ export interface PokerPlayer {
     name: string;
     chips: number;
     bet: number;
+    committed: number;
     hand: PokerCard[];
     folded: boolean;
     acted: boolean;
@@ -34,7 +35,7 @@ interface WinnerInfo {
     hand: HandEval;
 }
 
-type TexasAIActionName = 'fold' | 'check' | 'call' | 'raise';
+type TexasAIActionName = 'fold' | 'check' | 'call' | 'raise' | 'all-in';
 
 interface TexasAIActionResponse {
     ok?: boolean;
@@ -42,6 +43,22 @@ interface TexasAIActionResponse {
     amount?: number;
     source?: string;
     strength?: number;
+    error?: string;
+}
+
+interface SidePot {
+    amount: number;
+    eligiblePlayerIds: number[];
+}
+
+export interface SidePotInfo {
+    amount: number;
+    eligiblePlayerIds: number[];
+    eligibleNames: string[];
+}
+
+export interface BurnedCardInfo {
+    street: 'flop' | 'turn' | 'river';
 }
 
 const STARTING_CHIPS = 1000;
@@ -76,6 +93,7 @@ function createPlayer(id: number, name: string): PokerPlayer {
         name,
         chips: STARTING_CHIPS,
         bet: 0,
+        committed: 0,
         hand: [],
         folded: false,
         acted: false,
@@ -215,27 +233,9 @@ export function evaluateBestHand(cards: PokerCard[]): HandEval {
     return best || evaluateFive(cards.slice(0, 5));
 }
 
-function preflopStrength(hand: PokerCard[]): number {
-    if (hand.length < 2) return 0;
-    const [a, b] = [...hand].sort((x, y) => y.value - x.value);
-    const pair = a.value === b.value;
-    const suited = a.suit === b.suit;
-    const gap = Math.abs(a.value - b.value);
-    let score = (a.value + b.value) / 32;
-
-    if (pair) score += 0.34 + a.value / 30;
-    if (suited) score += 0.08;
-    if (gap === 1) score += 0.07;
-    else if (gap === 2) score += 0.03;
-    if (a.value >= 12 && b.value >= 10) score += 0.12;
-    if (a.value < 9 && b.value < 9 && !pair && gap > 2) score -= 0.12;
-
-    return Math.max(0.05, Math.min(0.98, score));
-}
-
 function makeLog(text: string, logs: string[]) {
     logs.unshift(text);
-    if (logs.length > 8) logs.pop();
+    if (logs.length > 40) logs.pop();
 }
 
 function readBestRounds(): number {
@@ -253,6 +253,7 @@ export function useTexasHoldem() {
     const players = ref<PokerPlayer[]>(createPlayers());
     const deck = ref<PokerCard[]>([]);
     const communityCards = ref<PokerCard[]>([]);
+    const burnedCards = ref<BurnedCardInfo[]>([]);
     const phase = ref<Phase>('idle');
     const pot = ref(0);
     const currentBet = ref(0);
@@ -273,9 +274,19 @@ export function useTexasHoldem() {
     const user = computed(() => players.value[0]);
     const callAmount = computed(() => getCallAmount(0));
     const canCheck = computed(() => callAmount.value === 0);
+    const canAllIn = computed(() => canAllInPlayer(user.value));
+    const minUserRaise = computed(() => currentBet.value + minRaise.value);
+    const maxUserRaise = computed(() => Math.max(0, user.value?.bet || 0) + Math.max(0, user.value?.chips || 0));
+    const canRaise = computed(() => canRaisePlayer(user.value));
     const activePlayers = computed(() => players.value.filter(player => !player.folded));
     const remainingMoney = computed(() => user.value?.chips || 0);
     const canAffordNextHand = computed(() => remainingMoney.value >= nextHandMinChips.value);
+    const sidePots = computed<SidePotInfo[]>(() =>
+        buildSidePots().map(sidePot => ({
+            ...sidePot,
+            eligibleNames: sidePot.eligiblePlayerIds.map(id => players.value[id]?.name || `座位${id + 1}`),
+        })),
+    );
     const phaseLabel = computed(() => {
         const labels: Record<Phase, string> = {
             idle: '等待开局',
@@ -291,6 +302,7 @@ export function useTexasHoldem() {
 
     function resetPlayerForHand(player: PokerPlayer) {
         player.bet = 0;
+        player.committed = 0;
         player.hand = [];
         player.folded = player.chips <= 0;
         player.acted = false;
@@ -333,6 +345,7 @@ export function useTexasHoldem() {
         deck.value = createDeck();
         shuffle(deck.value);
         communityCards.value = [];
+        burnedCards.value = [];
         pot.value = 0;
         currentBet.value = 0;
         minRaise.value = BIG_BLIND;
@@ -371,6 +384,7 @@ export function useTexasHoldem() {
         const amount = Math.min(blind, player.chips);
         player.chips -= amount;
         player.bet += amount;
+        player.committed += amount;
         pot.value += amount;
         if (player.chips === 0) player.acted = true;
     }
@@ -384,6 +398,7 @@ export function useTexasHoldem() {
         const paid = Math.min(amount, player.chips);
         player.chips -= paid;
         player.bet += paid;
+        player.committed += paid;
         pot.value += paid;
         return paid;
     }
@@ -400,9 +415,15 @@ export function useTexasHoldem() {
         advanceAfterAction(0);
     }
 
-    function playerRaise(extra: number) {
-        if (!isUsersTurn()) return;
-        raisePlayer(user.value, extra);
+    function playerRaiseTo(totalBet: number) {
+        if (!isUsersTurn() || !canRaisePlayer(user.value)) return;
+        raisePlayerTo(user.value, totalBet);
+        advanceAfterAction(0);
+    }
+
+    function playerAllIn() {
+        if (!isUsersTurn() || !canAllInPlayer(user.value)) return;
+        allInPlayer(user.value);
         advanceAfterAction(0);
     }
 
@@ -434,28 +455,78 @@ export function useTexasHoldem() {
 
         const paid = commitChips(player, amount);
         player.acted = true;
-        makeLog(`${player.name} 跟注 ${paid}`, actionLog.value);
-        message.value = `${player.name} 跟注`;
+        if (player.chips === 0) {
+            makeLog(`${player.name} All in ${paid}`, actionLog.value);
+            message.value = `${player.name} All in`;
+        } else {
+            makeLog(`${player.name} 跟注 ${paid}`, actionLog.value);
+            message.value = `${player.name} 跟注`;
+        }
     }
 
-    function raisePlayer(player: PokerPlayer, extra: number) {
-        const raiseBy = Math.max(extra, minRaise.value);
-        const totalNeeded = getCallAmount(player.id) + raiseBy;
+    function raisePlayerTo(player: PokerPlayer, totalBet: number) {
+        const targetBet = Math.max(currentBet.value + minRaise.value, Math.floor(totalBet));
+        const totalNeeded = Math.max(0, targetBet - player.bet);
         const paid = commitChips(player, totalNeeded);
         const previousBet = currentBet.value;
         currentBet.value = Math.max(currentBet.value, player.bet);
-        minRaise.value = Math.max(BIG_BLIND, currentBet.value - previousBet);
+        const actualRaise = currentBet.value - previousBet;
+        if (actualRaise >= minRaise.value) {
+            minRaise.value = Math.max(BIG_BLIND, actualRaise);
 
-        for (const other of players.value) {
-            if (!other.folded && other.id !== player.id && other.chips > 0) other.acted = false;
+            for (const other of players.value) {
+                if (!other.folded && other.id !== player.id && other.chips > 0) other.acted = false;
+            }
         }
         player.acted = true;
-        makeLog(`${player.name} 加注到 ${player.bet}`, actionLog.value);
-        message.value = `${player.name} 加注 ${paid}`;
+        if (player.chips === 0) {
+            makeLog(`${player.name} All in 到 ${player.bet}`, actionLog.value);
+            message.value = `${player.name} All in ${paid}`;
+        } else {
+            makeLog(`${player.name} 加注到 ${player.bet}`, actionLog.value);
+            message.value = `${player.name} 加注到 ${player.bet}`;
+        }
+    }
+
+    function allInPlayer(player: PokerPlayer) {
+        const previousBet = currentBet.value;
+        const paid = commitChips(player, player.chips);
+        const actualRaise = player.bet - previousBet;
+
+        if (player.bet > currentBet.value) {
+            currentBet.value = player.bet;
+        }
+        if (actualRaise >= minRaise.value) {
+            minRaise.value = Math.max(BIG_BLIND, actualRaise);
+
+            for (const other of players.value) {
+                if (!other.folded && other.id !== player.id && other.chips > 0) other.acted = false;
+            }
+        }
+        player.acted = true;
+        makeLog(`${player.name} All in ${paid}`, actionLog.value);
+        message.value = `${player.name} All in`;
+    }
+
+    function canRaisePlayer(player: PokerPlayer | undefined): boolean {
+        if (!player || player.folded || player.chips <= 0) return false;
+        return !player.acted && player.chips >= getCallAmount(player.id) + minRaise.value;
+    }
+
+    function canAllInPlayer(player: PokerPlayer | undefined): boolean {
+        if (!player || player.folded || player.chips <= 0) return false;
+        const call = getCallAmount(player.id);
+        return player.chips <= call || !player.acted || canRaisePlayer(player);
     }
 
     function advanceAfterAction(actorId: number) {
         if (awardIfOnlyOneLeft()) return;
+
+        if (shouldRunOutBoard()) {
+            runOutBoard();
+            showdown();
+            return;
+        }
 
         if (isBettingRoundComplete()) {
             advanceStreet();
@@ -469,8 +540,30 @@ export function useTexasHoldem() {
 
     function isBettingRoundComplete(): boolean {
         const waiting = players.value.filter(player => !player.folded && player.chips > 0);
-        if (waiting.length <= 1) return true;
+        if (waiting.length === 0) return true;
         return waiting.every(player => player.acted && player.bet === currentBet.value);
+    }
+
+    function shouldRunOutBoard(): boolean {
+        const contenders = players.value.filter(player => !player.folded);
+        const playersWithChips = contenders.filter(player => player.chips > 0);
+        return contenders.length > 1 && playersWithChips.length <= 1 && isBettingRoundComplete();
+    }
+
+    function runOutBoard() {
+        while (communityCards.value.length < 5) {
+            if (communityCards.value.length === 0) {
+                burnCard('flop');
+                communityCards.value.push(deck.value.pop()!, deck.value.pop()!, deck.value.pop()!);
+            } else if (communityCards.value.length === 3) {
+                burnCard('turn');
+                dealCommunityCard();
+            } else {
+                burnCard('river');
+                dealCommunityCard();
+            }
+        }
+        phase.value = 'river';
     }
 
     function awardIfOnlyOneLeft(): boolean {
@@ -504,20 +597,23 @@ export function useTexasHoldem() {
         minRaise.value = BIG_BLIND;
 
         if (players.value.filter(player => !player.folded && player.chips > 0).length === 0) {
-            while (communityCards.value.length < 5) dealCommunityCard();
+            runOutBoard();
             showdown();
             return;
         }
 
         if (communityCards.value.length === 0) {
+            burnCard('flop');
             communityCards.value.push(deck.value.pop()!, deck.value.pop()!, deck.value.pop()!);
             phase.value = 'flop';
             makeLog('翻牌发出', actionLog.value);
         } else if (communityCards.value.length === 3) {
+            burnCard('turn');
             dealCommunityCard();
             phase.value = 'turn';
             makeLog('转牌发出', actionLog.value);
         } else if (communityCards.value.length === 4) {
+            burnCard('river');
             dealCommunityCard();
             phase.value = 'river';
             makeLog('河牌发出', actionLog.value);
@@ -539,28 +635,83 @@ export function useTexasHoldem() {
         communityCards.value.push(deck.value.pop()!);
     }
 
-    function showdown() {
-        const contenders = players.value.filter(player => !player.folded);
+    function burnCard(street: BurnedCardInfo['street']) {
+        if (deck.value.length === 0) return;
+        deck.value.pop();
+        burnedCards.value.push({ street });
+    }
+
+    function buildSidePots(): SidePot[] {
+        const levels = [...new Set(players.value.map(player => player.committed).filter(amount => amount > 0))].sort(
+            (a, b) => a - b,
+        );
+        const sidePots: SidePot[] = [];
+        let previousLevel = 0;
+
+        for (const level of levels) {
+            const amount = players.value.reduce(
+                (sum, player) => sum + Math.max(0, Math.min(player.committed, level) - previousLevel),
+                0,
+            );
+            const eligiblePlayerIds = players.value
+                .filter(player => !player.folded && player.committed >= level)
+                .map(player => player.id);
+
+            if (amount > 0 && eligiblePlayerIds.length > 0) {
+                sidePots.push({ amount, eligiblePlayerIds });
+            }
+            previousLevel = level;
+        }
+
+        return sidePots;
+    }
+
+    function getBestPlayersForPot(eligiblePlayers: PokerPlayer[]): { hand: HandEval; players: PokerPlayer[] } | null {
         let best: HandEval | null = null;
         let winningPlayers: PokerPlayer[] = [];
 
-        for (const player of contenders) {
+        for (const player of eligiblePlayers) {
             const hand = evaluateBestHand([...player.hand, ...communityCards.value]);
             if (!best || compareEval(hand, best) > 0) {
                 best = hand;
                 winningPlayers = [player];
-            } else if (best && compareEval(hand, best) === 0) {
+            } else if (compareEval(hand, best) === 0) {
                 winningPlayers.push(player);
             }
         }
 
-        const share = Math.floor(pot.value / winningPlayers.length);
-        let remainder = pot.value - share * winningPlayers.length;
-        winners.value = winningPlayers.map(player => {
-            const amount = share + (remainder-- > 0 ? 1 : 0);
-            player.chips += amount;
-            return { playerId: player.id, amount, hand: best! };
-        });
+        return best ? { hand: best, players: winningPlayers } : null;
+    }
+
+    function showdown() {
+        const payouts = new Map<number, WinnerInfo>();
+
+        for (const sidePot of buildSidePots()) {
+            const eligiblePlayers = sidePot.eligiblePlayerIds
+                .map(id => players.value[id])
+                .filter((player): player is PokerPlayer => Boolean(player && !player.folded));
+            const result = getBestPlayersForPot(eligiblePlayers);
+            if (!result) continue;
+
+            const share = Math.floor(sidePot.amount / result.players.length);
+            let remainder = sidePot.amount - share * result.players.length;
+
+            for (const player of result.players) {
+                const amount = share + (remainder-- > 0 ? 1 : 0);
+                player.chips += amount;
+                const existing = payouts.get(player.id);
+                if (existing) {
+                    existing.amount += amount;
+                    if (compareEval(result.hand, existing.hand) > 0) existing.hand = result.hand;
+                } else {
+                    payouts.set(player.id, { playerId: player.id, amount, hand: result.hand });
+                }
+            }
+        }
+
+        winners.value = [...payouts.values()];
+        const winningPlayers = winners.value.map(winner => players.value[winner.playerId]);
+        const best = winners.value[0]?.hand || null;
 
         phase.value = 'showdown';
         message.value = `${winningPlayers.map(player => player.name).join('、')} 赢得底池`;
@@ -617,35 +768,12 @@ export function useTexasHoldem() {
         if (scheduledSeq !== handSeq || phase.value === 'idle' || phase.value === 'showdown' || phase.value === 'ended')
             return;
 
-        if (remoteAction && applyTexasAIAction(player, remoteAction)) {
+        if (remoteAction.ok && applyTexasAIAction(player, remoteAction)) {
             advanceAfterAction(player.id);
             return;
         }
 
-        runFallbackAIAction(player);
-    }
-
-    function runFallbackAIAction(player: PokerPlayer) {
-        const strength = estimateStrength(player);
-        const call = getCallAmount(player.id);
-        const pressure = call / Math.max(1, pot.value + call);
-        const canRaise = player.chips > call + minRaise.value;
-
-        if (call > 0 && strength + Math.random() * 0.18 < pressure + 0.18) {
-            foldPlayer(player);
-            advanceAfterAction(player.id);
-            return;
-        }
-
-        if (canRaise && (strength > 0.82 || (call === 0 && strength > 0.68 && Math.random() < 0.35))) {
-            const extra = strength > 0.9 ? BIG_BLIND * 4 : BIG_BLIND * 2;
-            raisePlayer(player, Math.min(extra, player.chips - call));
-            advanceAfterAction(player.id);
-            return;
-        }
-
-        callOrCheck(player);
-        advanceAfterAction(player.id);
+        reportTexasAIError(remoteAction.error || 'AI 未返回合法动作');
     }
 
     function getLegalActions(player: PokerPlayer): TexasAIActionName[] {
@@ -656,13 +784,16 @@ export function useTexasHoldem() {
         } else {
             actions.push('check');
         }
-        if (player.chips > call + minRaise.value) {
+        if (canRaisePlayer(player)) {
             actions.push('raise');
+        }
+        if (canAllInPlayer(player)) {
+            actions.push('all-in');
         }
         return actions;
     }
 
-    async function requestTexasAIAction(player: PokerPlayer): Promise<TexasAIActionResponse | null> {
+    async function requestTexasAIAction(player: PokerPlayer): Promise<TexasAIActionResponse> {
         const payload = {
             player: player.id,
             phase: phase.value,
@@ -672,6 +803,8 @@ export function useTexasHoldem() {
             currentBet: currentBet.value,
             callAmount: getCallAmount(player.id),
             minRaise: minRaise.value,
+            minRaiseTo: currentBet.value + minRaise.value,
+            maxRaiseTo: player.bet + player.chips,
             chips: player.chips,
             opponentCount: players.value.filter(other => other.id !== player.id && !other.folded).length,
             legalActions: getLegalActions(player),
@@ -681,6 +814,7 @@ export function useTexasHoldem() {
                 bet: other.bet,
                 folded: other.folded,
                 acted: other.acted,
+                committed: other.committed,
             })),
         };
 
@@ -690,13 +824,33 @@ export function useTexasHoldem() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
-            if (!response.ok) return null;
-            const result = await response.json();
-            if (!result?.ok || typeof result.action !== 'string') return null;
+            const result = await response.json().catch(() => null);
+            if (!response.ok) {
+                return {
+                    ok: false,
+                    error: result?.error || `Texas AI 请求失败：HTTP ${response.status}`,
+                };
+            }
+            if (!result?.ok || typeof result.action !== 'string') {
+                return {
+                    ok: false,
+                    error: result?.error || 'Texas AI 响应缺少合法动作',
+                };
+            }
             return result;
-        } catch {
-            return null;
+        } catch (error) {
+            return {
+                ok: false,
+                error: error instanceof Error ? error.message : String(error),
+            };
         }
+    }
+
+    function reportTexasAIError(error: string) {
+        clearAITimer();
+        const text = `Texas AI 调用失败：${error}`;
+        message.value = text;
+        makeLog(text, actionLog.value);
     }
 
     function applyTexasAIAction(player: PokerPlayer, result: TexasAIActionResponse): boolean {
@@ -714,16 +868,14 @@ export function useTexasHoldem() {
         }
         if (action === 'raise') {
             const amount = Number.isFinite(result.amount) ? Number(result.amount) : minRaise.value;
-            raisePlayer(player, Math.max(minRaise.value, Math.floor(amount)));
+            raisePlayerTo(player, Math.floor(amount));
+            return true;
+        }
+        if (action === 'all-in') {
+            allInPlayer(player);
             return true;
         }
         return false;
-    }
-
-    function estimateStrength(player: PokerPlayer): number {
-        if (communityCards.value.length < 3) return preflopStrength(player.hand);
-        const hand = evaluateBestHand([...player.hand, ...communityCards.value]);
-        return Math.min(0.98, hand.category / 9 + (hand.ranks[0] || 2) / 140);
     }
 
     function nextSeatWithChips(fromId: number): number {
@@ -746,7 +898,7 @@ export function useTexasHoldem() {
         for (let i = 1; i <= players.value.length; i++) {
             const id = (fromId + i) % players.value.length;
             const player = players.value[id];
-            if (!player.folded && player.chips > 0) return id;
+            if (!player.folded && player.chips > 0 && (!player.acted || player.bet < currentBet.value)) return id;
         }
         return fromId;
     }
@@ -773,6 +925,7 @@ export function useTexasHoldem() {
     return {
         players,
         communityCards,
+        burnedCards,
         phase,
         pot,
         currentBet,
@@ -788,13 +941,19 @@ export function useTexasHoldem() {
         user,
         callAmount,
         canCheck,
+        canAllIn,
+        canRaise,
+        minUserRaise,
+        maxUserRaise,
         activePlayers,
+        sidePots,
         phaseLabel,
         startGame,
         startNextHand,
         playerFold,
         playerCallOrCheck,
-        playerRaise,
+        playerRaiseTo,
+        playerAllIn,
         getCallAmount,
         getBestHandForPlayer,
         isWinner,
