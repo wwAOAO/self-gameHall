@@ -312,7 +312,7 @@ function commitRaise() {
 .texas-page {
     min-height: 100dvh;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto minmax(0, 1fr) 42px 70px;
     overflow-y: auto;
     background:
         linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
@@ -799,6 +799,8 @@ function commitRaise() {
 
 .info-strip {
     width: min(1100px, 100%);
+    height: 42px;
+    min-height: 42px;
     margin: 0 auto;
     padding: 2px 14px 0;
     display: grid;
@@ -809,6 +811,7 @@ function commitRaise() {
 
 .info-item,
 .log-line {
+    height: 34px;
     min-height: 34px;
     display: flex;
     align-items: center;
@@ -837,18 +840,22 @@ function commitRaise() {
 }
 
 .action-dock {
-    min-height: 58px;
-    padding: 6px 14px 10px;
+    height: 70px;
+    min-height: 70px;
+    max-height: 70px;
+    padding: 7px 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     flex-wrap: wrap;
+    overflow: hidden;
 }
 
 .raise-control {
     width: min(230px, calc(100vw - 28px));
-    min-height: 44px;
+    height: 48px;
+    min-height: 48px;
     display: grid;
     grid-template-columns: 72px minmax(86px, 1fr);
     grid-template-rows: 22px 18px;
@@ -951,6 +958,7 @@ function commitRaise() {
 }
 
 .waiting-pill {
+    height: 38px;
     min-height: 38px;
     padding: 8px 13px;
     font-size: 13px;
@@ -992,7 +1000,7 @@ function commitRaise() {
 
 @media (max-width: 860px) {
     .texas-page {
-        grid-template-rows: auto auto auto auto;
+        grid-template-rows: auto auto 42px 70px;
     }
 
     .texas-header {
@@ -1075,6 +1083,8 @@ function commitRaise() {
     }
 
     .info-strip {
+        height: 42px;
+        min-height: 42px;
         grid-template-columns: 1fr;
         padding: 2px 8px 0;
     }
@@ -1086,14 +1096,17 @@ function commitRaise() {
     .action-dock {
         position: sticky;
         bottom: 0;
-        min-height: 58px;
+        height: 70px;
+        min-height: 70px;
+        max-height: 70px;
         background: rgba(12, 24, 28, 0.92);
         backdrop-filter: blur(12px);
     }
 
     .primary-action,
     .secondary-action,
-    .danger-action {
+    .danger-action,
+    .all-in-action {
         min-height: 36px;
         padding: 7px 10px;
     }

@@ -328,14 +328,22 @@ export function useTexasHoldem() {
             endSurvivalRun();
             return;
         }
-        if (players.value.filter(player => player.chips > 0).length < 2) {
-            phase.value = 'ended';
-            const chipLeader = [...players.value].sort((a, b) => b.chips - a.chips)[0];
-            message.value = `${chipLeader.name} 赢下整桌筹码`;
-            return;
-        }
+        refillBustedBots();
         dealerIndex.value = nextSeatWithChips(dealerIndex.value);
         startHand(false);
+    }
+
+    function refillBustedBots() {
+        for (const player of players.value) {
+            if (player.id === 0 || player.chips >= nextHandMinChips.value) continue;
+            player.chips = STARTING_CHIPS;
+            player.bet = 0;
+            player.committed = 0;
+            player.hand = [];
+            player.folded = false;
+            player.acted = false;
+            makeLog(`${player.name} 重新入座，带入 ${STARTING_CHIPS}`, actionLog.value);
+        }
     }
 
     function startHand(resetDealer: boolean) {
